@@ -1,0 +1,166 @@
+name: '[Auto] Sync & PR Labeler'
+
+on:
+  schedule:
+    - cron: "0 23 * * *"
+  workflow_dispatch:
+  workflow_call:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - closed
+      - reopened
+
+#jobs:
+#  reuse:
+#    uses: sator-imaging/.github/.github/workflows/Auto-dot-github.yml@main
+#    secrets: inherit
+#    permissions:
+#      pull-requests: write
+#      # .github sync
+#      contents: write
+#      # PR labeler
+#      issues: write
+
+
+###
+###   Copy above (including 'on') and uncomment to reuse this action in other repo
+###
+
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+env:
+  GH_TOKEN: ${{ github.token }}  # For gh command
+  # .github sync
+  WORKDIR: dot-github-sync
+  TARGET_DIR: .github
+  CENTRAL_REPO: ${{ github.repository_owner }}/.github
+  # PR labeler
+  PR_TITLE: ${{ github.event.pull_request.title }}
+  PR_NUMBER: ${{ github.event.pull_request.number }}
+  MERGE_COMMIT_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+  REPO: ${{ github.repository }}
+
+
+jobs:
+  dot-github:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            ${{ env.TARGET_DIR }}
+          sparse-checkout-cone-mode: true
+
+      - uses: actions/checkout@v6
+        with:
+          repository: ${{ env.CENTRAL_REPO }}
+          path: ${{ env.WORKDIR }}
+          sparse-checkout: |
+            ${{ env.TARGET_DIR }}
+          sparse-checkout-cone-mode: true
+
+      - name: Commit + Push + Create PR
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          BRANCH="bot/${WORKDIR}"
+
+          git pull
+
+          # If remote branch exists → track it
+          if git show-ref --verify --quiet "refs/remotes/origin/$BRANCH"; then
+            git checkout -B "$BRANCH" "origin/$BRANCH"
+          else
+            git checkout -b "$BRANCH"
+          fi
+
+          # Sync all files (additive)
+          mkdir -p "$TARGET_DIR"
+          rsync -av "$WORKDIR/$TARGET_DIR/" "$TARGET_DIR/"
+
+          # There is no way to update workflows with 'permissions' in yaml
+          rm -rf "$TARGET_DIR"/workflows/*.yml
+
+          TS=$(date -u +"%Y%m%d-%H%M%S")
+
+          git add --ignore-removal "$TARGET_DIR"
+          git commit -m "[bot] Sync \`${TARGET_DIR}\` ($TS)" \
+            || exit 0
+          git push -u origin "$BRANCH"
+
+          # Create PR only if one doesn't already exist
+          gh pr create \
+            --head "$BRANCH" \
+            --base main \
+            --fill \
+            || echo PR already exists
+
+  pr-labeler:
+    if: github.event_name == 'pull_request'
+
+    runs-on: ubuntu-slim
+    steps:
+      - name: Add labels based on Conventional Commits
+        run: |
+          ## Check both PR title and merge commit title
+
+          if [ -n "$MERGE_COMMIT_SHA" ]; then
+            COMMIT_TITLE=$(gh api \
+              repos/$REPO/commits/$MERGE_COMMIT_SHA \
+              --jq '.commit.message | split("\n")[0]')
+          else
+            COMMIT_TITLE=""
+          fi
+
+          echo "PR title: $PR_TITLE"
+          echo "Merge commit title: $COMMIT_TITLE"
+
+          matches_pattern() {
+            local pattern="$1"
+
+            echo "$PR_TITLE" | grep -qE "$pattern" \
+              || echo "$COMMIT_TITLE" | grep -qE "$pattern"
+          }
+
+
+          ## Labels chosen for GH Release Notes Generation
+
+          labels=()
+
+          if matches_pattern '^fix[:(]'; then
+            labels+=("bug")
+          fi
+
+          if matches_pattern '^feat[:(]'; then
+            labels+=("enhancement")
+          fi
+
+          if matches_pattern '^docs[:(]'; then
+            labels+=("documentation")
+          fi
+
+          if matches_pattern '^[a-z]+(\(.+\))?!:'; then
+            labels+=("breaking-change")
+          fi
+
+
+          ## Add detected labels or log warning
+
+          if [ ${#labels[@]} -eq 0 ]; then
+            echo "::warning title=No release-note label detected::PR title='$PR_TITLE' commit title='$COMMIT_TITLE'"
+          fi
+
+          for label in "${labels[@]}"; do
+            gh issue edit "$PR_NUMBER" \
+              --repo "$REPO" \
+              --add-label "$label"
+          done

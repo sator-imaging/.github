@@ -160,6 +160,7 @@ jobs:
           fi
 
           for label in "${labels[@]}"; do
+            echo "Adding label...: $label"
             gh issue edit "$PR_NUMBER" \
               --repo "$REPO" \
               --add-label "$label"

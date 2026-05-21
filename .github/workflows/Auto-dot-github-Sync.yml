@@ -78,7 +78,9 @@ jobs:
           git push -u origin "$BRANCH"
 
           # Create PR only if one doesn't already exist
-          if ! gh pr view "$BRANCH" >/dev/null 2>&1; then
+          if gh pr view "$BRANCH" >/dev/null 2>&1; then
+            echo PR already exists
+          else
             gh pr create \
               --head "$BRANCH" \
               --base main \

@@ -66,7 +66,7 @@ jobs:
           # There is no way to update workflows with 'permissions' in yaml
           rm -rf "$TARGET_DIR"/workflows/*.yml
 
-          git add "$TARGET_DIR"
+          git add --ignore-removal "$TARGET_DIR"
           git diff --cached --quiet \
             && exit 0
 

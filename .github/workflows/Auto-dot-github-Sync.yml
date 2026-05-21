@@ -70,13 +70,11 @@ jobs:
           # There is no way to update workflows with 'permissions' in yaml
           rm -rf "$TARGET_DIR"/workflows/*.yml
 
-          git add --ignore-removal "$TARGET_DIR"
-          git diff --quiet \
-            && exit 0
-
           TS=$(date -u +"%Y%m%d-%H%M%S")
 
-          git commit -m "[bot] Sync \`${TARGET_DIR}\` ($TS)"
+          git add --ignore-removal "$TARGET_DIR"
+          git commit -m "[bot] Sync \`${TARGET_DIR}\` ($TS)" \
+            || exit 0
           git push -u origin "$BRANCH"
 
           # Create PR only if one doesn't already exist

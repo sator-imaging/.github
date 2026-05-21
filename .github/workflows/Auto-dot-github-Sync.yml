@@ -14,6 +14,10 @@ on:
 #      contents: write
 #      pull-requests: write
 
+###
+###   Copy above (including 'on') and uncomment to reuse this action in other repo
+###
+
 permissions:
   contents: write
   pull-requests: write
@@ -67,7 +71,7 @@ jobs:
           rm -rf "$TARGET_DIR"/workflows/*.yml
 
           git add --ignore-removal "$TARGET_DIR"
-          git diff --cached --quiet \
+          git diff --quiet \
             && exit 0
 
           TS=$(date -u +"%Y%m%d-%H%M%S")

@@ -1,4 +1,4 @@
-name: '[Auto] Sync & PR Labeler'
+name: '[Auto] Repo Gardening'
 
 on:
   schedule:
@@ -11,6 +11,9 @@ on:
       - edited
       - closed
       - reopened
+  release:
+    types:
+      - published
 
 #jobs:
 #  reuse:
@@ -18,7 +21,7 @@ on:
 #    secrets: inherit
 #    permissions:
 #      pull-requests: write
-#      contents: write  # Sync .github
+#      contents: write  # Sync .github | Changelog
 #      issues: write    # PR labeler
 
 
@@ -43,6 +46,8 @@ env:
   PR_NUMBER: ${{ github.event.pull_request.number }}
   MERGE_COMMIT_SHA: ${{ github.event.pull_request.merge_commit_sha }}
   REPO: ${{ github.repository }}
+  # Changelog
+  CHANGELOG_FILE: CHANGELOG.md
 
 
 jobs:
@@ -65,16 +70,17 @@ jobs:
             ${{ env.TARGET_DIR }}
           sparse-checkout-cone-mode: true
 
-      - name: Commit + Push + Create PR
+      - name: Main
         run: |
+          set -euo pipefail
+
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           BRANCH="bot/${WORKDIR}"
 
-          git pull
-
           # If remote branch exists → track it
+          git pull
           if git show-ref --verify --quiet "refs/remotes/origin/$BRANCH"; then
             git checkout -B "$BRANCH" "origin/$BRANCH"
           else
@@ -100,16 +106,28 @@ jobs:
             --head "$BRANCH" \
             --base main \
             --fill \
-            || echo PR already exists
+            || echo "::warning title=PR already exists::"
 
   pr-labeler:
     if: github.event_name == 'pull_request'
 
     runs-on: ubuntu-slim
     steps:
-      - name: Add labels based on Conventional Commits
+      - name: Main
         run: |
+          set -euo pipefail
+
           ## Check both PR title and merge commit title
+
+          matches_pattern() {
+            local pattern="$1"
+
+            # Case-insensitive
+            echo "$COMMIT_TITLE" | grep -qiE "$pattern" \
+              || echo "$PR_TITLE" | grep -qiE "$pattern"
+          }
+
+          ## Get a merge commit title
 
           if [ -n "$MERGE_COMMIT_SHA" ]; then
             COMMIT_TITLE=$(gh api \
@@ -119,17 +137,10 @@ jobs:
             COMMIT_TITLE=""
           fi
 
-          echo "PR title: $PR_TITLE"
-          echo "Merge commit title: $COMMIT_TITLE"
-
-          matches_pattern() {
-            local pattern="$1"
-
-            # Case-insensitive
-            echo "$PR_TITLE" | grep -qiE "$pattern" \
-              || echo "$COMMIT_TITLE" | grep -qiE "$pattern"
-          }
-
+          {
+            echo "📦 PR title: $PR_TITLE"
+            echo "🔀 Merge commit title: $COMMIT_TITLE"
+          } >> $GITHUB_STEP_SUMMARY
 
           ## Labels chosen for GH Release Notes Generation
 
@@ -151,16 +162,121 @@ jobs:
             labels+=("breaking-change")
           fi
 
-
           ## Add detected labels or log warning
 
           if [ ${#labels[@]} -eq 0 ]; then
             echo "::warning title=No release-note label detected::PR title='$PR_TITLE' commit title='$COMMIT_TITLE'"
           fi
 
+          echo "Labels" >> $GITHUB_STEP_SUMMARY
+
           for label in "${labels[@]}"; do
-            echo "Adding label...: $label"
+            echo "- $label" >> $GITHUB_STEP_SUMMARY
+
             gh issue edit "$PR_NUMBER" \
               --repo "$REPO" \
               --add-label "$label"
           done
+
+  changelog:
+    if: |
+      (github.event_name == 'release' && github.event.action == 'published')
+      || github.event_name == 'workflow_dispatch'
+
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          sparse-checkout: |
+            ${{ env.CHANGELOG_FILE }}
+          sparse-checkout-cone-mode: false
+
+      - name: Main
+        run: |
+          set -euo pipefail
+
+          echo "===================================="
+          echo "📦 Fetch latest release"
+          echo "===================================="
+
+          RELEASE_JSON="$(gh release view --latest --json tagName,body,url)"
+
+          RELEASE_TAG="$(jq -r '.tagName' <<< "$RELEASE_JSON")"
+          RELEASE_BODY="$(jq -r '.body' <<< "$RELEASE_JSON")"
+          RELEASE_URL="$(jq -r '.url' <<< "$RELEASE_JSON")"
+
+          echo "👉 Tag:  $RELEASE_TAG"
+          echo "👉 URL:  $RELEASE_URL"
+          echo "👉 Body:"
+          echo "$RELEASE_BODY"
+
+          RELEASE_BODY_CLEAN="$(awk '
+            BEGIN { skip=0 }
+            /^##[[:space:]]*What.*Changed/ { skip=1; next }
+            skip==1 { print }
+          ' <<< "$RELEASE_BODY")"
+
+          echo "===================================="
+          echo "📝 Preparing CHANGELOG"
+          echo "===================================="
+
+          if grep -q "^## ${RELEASE_TAG}$" "$CHANGELOG_FILE"; then
+            echo "::warning title=Already exists in CHANGELOG::Skipping update: ${RELEASE_TAG}"
+            exit 0
+          fi
+
+          CHANGELOG_BODY_CLEAN="$(awk '
+            /^# Changelog$/ { f=1; next }
+            f
+          ' "$CHANGELOG_FILE")"
+
+          {
+            echo "# Changelog"
+            echo
+            echo "## [${RELEASE_TAG}](${RELEASE_URL})"
+            echo
+            echo "$RELEASE_BODY_CLEAN"
+            echo
+            echo "$CHANGELOG_BODY_CLEAN"
+          } > "$CHANGELOG_FILE"
+
+          echo "===================================="
+          echo "📄 CHANGELOG updated"
+          echo "===================================="
+
+          echo "Preview (top 20 lines):"
+          head -n 20 "$CHANGELOG_FILE" || true
+
+          echo "===================================="
+          echo "🚀 Creating Pull Request"
+          echo "===================================="
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          BRANCH="bot/changelog-${RELEASE_TAG}"
+
+          # If remote branch exists → track it
+          git pull
+          if git show-ref --verify --quiet "refs/remotes/origin/$BRANCH"; then
+            git checkout -B "$BRANCH" "origin/$BRANCH"
+          else
+            git checkout -b "$BRANCH"
+          fi
+
+          TS=$(date -u +"%Y%m%d-%H%M%S")
+
+          git add "$CHANGELOG_FILE"
+          git commit -m "[bot] Changelog ${RELEASE_TAG} ($TS)" \
+            || exit 0
+          git push -u origin "$BRANCH"
+
+          echo "📤 Branch pushed: $BRANCH"
+
+          # Create PR only if one doesn't already exist
+          gh pr create \
+            --head "$BRANCH" \
+            --base main \
+            --fill \
+            || echo "::warning title=PR already exists::${RELEASE_TAG}"

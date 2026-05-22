@@ -18,10 +18,8 @@ on:
 #    secrets: inherit
 #    permissions:
 #      pull-requests: write
-#      # .github sync
-#      contents: write
-#      # PR labeler
-#      issues: write
+#      contents: write  # .github sync
+#      issues: write    # PR labeler
 
 
 ###

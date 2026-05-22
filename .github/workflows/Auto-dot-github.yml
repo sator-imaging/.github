@@ -18,7 +18,7 @@ on:
 #    secrets: inherit
 #    permissions:
 #      pull-requests: write
-#      contents: write  # .github sync
+#      contents: write  # Sync .github
 #      issues: write    # PR labeler
 
 
@@ -34,7 +34,7 @@ permissions:
 
 env:
   GH_TOKEN: ${{ github.token }}  # For gh command
-  # .github sync
+  # Sync .github
   WORKDIR: dot-github-sync
   TARGET_DIR: .github
   CENTRAL_REPO: ${{ github.repository_owner }}/.github

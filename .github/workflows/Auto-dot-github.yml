@@ -200,7 +200,7 @@ jobs:
           echo "📦 Fetch latest release"
           echo "===================================="
 
-          RELEASE_JSON="$(ggh api repos/:owner/:repo/releases/latest \
+          RELEASE_JSON="$(gh api repos/:owner/:repo/releases/latest \
             --jq '{tagName: .tag_name, body: .body, url: .html_url}')"
 
           RELEASE_TAG="$(jq -r '.tagName' <<< "$RELEASE_JSON")"

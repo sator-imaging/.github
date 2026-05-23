@@ -99,7 +99,7 @@ jobs:
           # Force push even if not allowed in .gitignore
           git add -f --ignore-removal "$TARGET_DIR"
           git commit -m "[bot] Sync \`${TARGET_DIR}\` ($TS)" \
-            || exit 0
+            || (echo "::warning title=No changes::Skipped" && exit 0)
           git push -u origin "$BRANCH"
 
           # Create PR only if one doesn't already exist
@@ -276,7 +276,7 @@ jobs:
           # Force push even if not allowed in .gitignore
           git add -f "$CHANGELOG_FILE"
           git commit -m "[bot] Changelog ${RELEASE_TAG} ($TS)" \
-            || exit 0
+            || (echo "::warning title=No changes::Skipped ${RELEASE_TAG}" && exit 0)
           git push -u origin "$BRANCH"
 
           echo "📤 Branch pushed: $BRANCH"

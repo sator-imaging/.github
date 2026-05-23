@@ -107,7 +107,7 @@ jobs:
             --head "$BRANCH" \
             --base main \
             --fill \
-            || echo "::warning title=PR already exists::"
+            || echo "::warning title=PR already exists::Skipped"
 
   pr-labeler:
     if: github.event_name == 'pull_request'
@@ -286,4 +286,4 @@ jobs:
             --head "$BRANCH" \
             --base main \
             --fill \
-            || echo "::warning title=PR already exists::${RELEASE_TAG}"
+            || echo "::warning title=PR already exists::Skipped ${RELEASE_TAG}"

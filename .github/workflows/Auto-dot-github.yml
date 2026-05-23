@@ -254,10 +254,11 @@ jobs:
             found { print }
           ' "$CHANGELOG_FILE")"
 
+          # Version section format is aligned to 'release-please'
           {
             echo "# Changelog"
             echo
-            echo "## [${RELEASE_TAG}](${RELEASE_URL})"
+            echo "## [${RELEASE_TAG}](${RELEASE_URL}) ($(date -u +'%Y-%m-%d'))"
             echo
             echo "$RELEASE_BODY_CLEAN"
             echo

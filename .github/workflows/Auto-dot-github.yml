@@ -99,7 +99,7 @@ jobs:
           {
             # Force push even if not allowed in .gitignore
             git add -f --ignore-removal "$TARGET_DIR"
-            git commit -m "[bot] Sync \`${TARGET_DIR}\` ($TS)" \
+            git commit -m "[bot] Sync \`${TARGET_DIR}\` ($TS)"
           } || (echo "::warning title=No changes::Skipped" && exit 0)
           git push -u origin "$BRANCH"
 
@@ -283,7 +283,7 @@ jobs:
           {
             # Force push even if not allowed in .gitignore
             git add -f "$CHANGELOG_FILE"
-            git commit -m "[bot] Changelog ${RELEASE_TAG} ($TS)" \
+            git commit -m "[bot] Changelog ${RELEASE_TAG} ($TS)"
           } || (echo "::warning title=No changes::Skipped ${RELEASE_TAG}" && exit 0)
           git push -u origin "$BRANCH"
 

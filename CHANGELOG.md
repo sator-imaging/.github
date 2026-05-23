@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.0.4](https://github.com/sator-imaging/.github/releases/tag/v0.0.4)
+
+### 📚 Other Changes
+* [bot] Changelog v0.0.0 (20260523-002809) by @github-actions[bot] in https://github.com/sator-imaging/.github/pull/1
+* [bot] Changelog v0.0.1 (20260523-004350) by @github-actions[bot] in https://github.com/sator-imaging/.github/pull/2
+* [bot] Changelog v0.0.2 (20260523-010337) by @github-actions[bot] in https://github.com/sator-imaging/.github/pull/3
+* [bot] Changelog v0.0.3 (20260523-014018) by @github-actions[bot] in https://github.com/sator-imaging/.github/pull/7
+
+* @github-actions[bot] made their first contribution in https://github.com/sator-imaging/.github/pull/1
+
+**Full Changelog**: https://github.com/sator-imaging/.github/compare/v0.0.0...v0.0.4
+
+
 ## [v0.0.3](https://github.com/sator-imaging/.github/releases/tag/v0.0.3)
 
 ### 📚 Other Changes

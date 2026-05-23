@@ -189,6 +189,7 @@ jobs:
         with:
           fetch-depth: 0
           sparse-checkout: |
+            .git
             ${{ env.CHANGELOG_FILE }}
           sparse-checkout-cone-mode: false
 

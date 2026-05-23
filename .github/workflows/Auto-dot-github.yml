@@ -224,6 +224,23 @@ jobs:
           echo "📝 Preparing CHANGELOG"
           echo "===================================="
 
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          BRANCH="bot/changelog-${RELEASE_TAG}"
+
+          # If remote branch exists → track it
+          git fetch origin
+          if git show-ref --verify --quiet "refs/remotes/origin/$BRANCH"; then
+            git checkout -B "$BRANCH" "origin/$BRANCH"
+          else
+            git checkout -b "$BRANCH"
+          fi
+
+          echo "===================================="
+          echo "📄 CHANGELOG updated"
+          echo "===================================="
+
           touch "$CHANGELOG_FILE"
 
           if grep -q "^## ${RELEASE_TAG}$" "$CHANGELOG_FILE"; then
@@ -247,29 +264,12 @@ jobs:
             echo "$CHANGELOG_BODY_CLEAN"
           } > "$CHANGELOG_FILE"
 
-          echo "===================================="
-          echo "📄 CHANGELOG updated"
-          echo "===================================="
-
           echo "Preview (top 20 lines):"
           head -n 20 "$CHANGELOG_FILE" || true
 
           echo "===================================="
           echo "🚀 Creating Pull Request"
           echo "===================================="
-
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          BRANCH="bot/changelog-${RELEASE_TAG}"
-
-          # If remote branch exists → track it
-          git fetch origin
-          if git show-ref --verify --quiet "refs/remotes/origin/$BRANCH"; then
-            git checkout -B "$BRANCH" "origin/$BRANCH"
-          else
-            git checkout -b "$BRANCH"
-          fi
 
           TS=$(date -u +"%Y%m%d-%H%M%S")
 

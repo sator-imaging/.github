@@ -21,7 +21,7 @@ on:
 #    secrets: inherit
 #    permissions:
 #      pull-requests: write
-#      contents: write  # Sync .github | Changelog
+#      contents: write  # Sync .github | Auto changelog
 #      issues: write    # PR labeler
 
 
@@ -31,8 +31,8 @@ on:
 
 
 permissions:
-  contents: write
   pull-requests: write
+  contents: write
   issues: write
 
 env:
@@ -46,7 +46,7 @@ env:
   PR_NUMBER: ${{ github.event.pull_request.number }}
   MERGE_COMMIT_SHA: ${{ github.event.pull_request.merge_commit_sha }}
   REPO: ${{ github.repository }}
-  # Changelog
+  # Auto changelog
   CHANGELOG_FILE: CHANGELOG.md
 
 
@@ -80,7 +80,7 @@ jobs:
           BRANCH="bot/${WORKDIR}"
 
           # If remote branch exists → track it
-          git pull
+          git fetch origin
           if git show-ref --verify --quiet "refs/remotes/origin/$BRANCH"; then
             git checkout -B "$BRANCH" "origin/$BRANCH"
           else
@@ -96,7 +96,8 @@ jobs:
 
           TS=$(date -u +"%Y%m%d-%H%M%S")
 
-          git add --ignore-removal "$TARGET_DIR"
+          # Force push even if not allowed in .gitignore
+          git add -f --ignore-removal "$TARGET_DIR"
           git commit -m "[bot] Sync \`${TARGET_DIR}\` ($TS)" \
             || exit 0
           git push -u origin "$BRANCH"
@@ -178,7 +179,7 @@ jobs:
               --add-label "$label"
           done
 
-  changelog:
+  auto-changelog:
     if: |
       (github.event_name == 'release' && github.event.action == 'published')
       || github.event_name == 'workflow_dispatch'
@@ -263,7 +264,7 @@ jobs:
           BRANCH="bot/changelog-${RELEASE_TAG}"
 
           # If remote branch exists → track it
-          git pull
+          git fetch origin
           if git show-ref --verify --quiet "refs/remotes/origin/$BRANCH"; then
             git checkout -B "$BRANCH" "origin/$BRANCH"
           else
@@ -272,7 +273,8 @@ jobs:
 
           TS=$(date -u +"%Y%m%d-%H%M%S")
 
-          git add "$CHANGELOG_FILE"
+          # Force push even if not allowed in .gitignore
+          git add -f "$CHANGELOG_FILE"
           git commit -m "[bot] Changelog ${RELEASE_TAG} ($TS)" \
             || exit 0
           git push -u origin "$BRANCH"

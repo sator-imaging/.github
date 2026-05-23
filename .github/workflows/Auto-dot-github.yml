@@ -263,8 +263,11 @@ jobs:
             echo "## [${RELEASE_TAG}](${RELEASE_URL}) ($(date -u +'%Y-%m-%d'))"
             echo
             echo "$RELEASE_BODY_CLEAN"
-            echo
-            echo "$CHANGELOG_BODY_CLEAN"
+
+            if [ -n "$CHANGELOG_BODY_CLEAN" ]; then
+              echo
+              echo "$CHANGELOG_BODY_CLEAN"
+            fi
           } > "$CHANGELOG_FILE"
 
           echo "Preview (top 20 lines):"

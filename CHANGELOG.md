@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.0.5](https://github.com/sator-imaging/.github/releases/tag/v0.0.5) (2026-05-23)
+
+### 📚 Other Changes
+* [bot] Changelog 0.0.4 (20260523-014643) by @github-actions[bot] in https://github.com/sator-imaging/.github/pull/8
+
+
+**Full Changelog**: https://github.com/sator-imaging/.github/compare/v0.0.4...v0.0.5
+
+
 ## [0.0.4](https://github.com/sator-imaging/.github/releases/tag/v0.0.4)
 
 ### 📚 Other Changes

@@ -203,8 +203,9 @@ jobs:
           echo "===================================="
 
           RELEASE_JSON="$(gh api repos/:owner/:repo/releases?per_page=3 \
-            --jq '[.[] | select(.draft == false)
-                  | {tagName: .tag_name, body: .body, url: .html_url}]')"
+            --jq 'map(select(.draft == false)
+                  | {tagName: .tag_name, body: .body, url: .html_url})
+                  | .[0]' )"
 
           RELEASE_TAG="$(jq -r '.tagName' <<< "$RELEASE_JSON" | sed 's/^v//')"
           RELEASE_BODY="$(jq -r '.body' <<< "$RELEASE_JSON")"

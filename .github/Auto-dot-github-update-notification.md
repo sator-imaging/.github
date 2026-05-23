@@ -1,4 +1,4 @@
-# `Auto-dot-github.yml` Update
+# `Auto-dot-github.yml` Update Notification
 
 > [!TIP]
 > Update this file will notify the listener repos of changes.

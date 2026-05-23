@@ -222,6 +222,8 @@ jobs:
           echo "📝 Preparing CHANGELOG"
           echo "===================================="
 
+          touch "$CHANGELOG_FILE"
+
           if grep -q "^## ${RELEASE_TAG}$" "$CHANGELOG_FILE"; then
             echo "::warning title=Already exists in CHANGELOG::Skipping update: ${RELEASE_TAG}"
             exit 0

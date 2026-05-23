@@ -1,3 +1,9 @@
+# `Auto-dot-github.yml` Update
+
+> [!TIP]
+> Update this file will notify the listener repos of changes.
+
+```yml
 name: '[Auto] Repo Gardening'
 
 on:
@@ -23,3 +29,4 @@ jobs:
       pull-requests: write
       contents: write  # Sync .github | Auto changelog
       issues: write    # PR labeler
+```

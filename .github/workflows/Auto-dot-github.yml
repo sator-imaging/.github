@@ -11,15 +11,24 @@ on:
       - reopened
   release:
     types:
-      - published  # Auto changelog | Auto bump
-      ## Workflows are not triggered for the created, edited, or deleted activity types for draft releases.
-      #- created    # Auto bump
+      - published  # Auto changelog
+  # NOTE: draft release won't trigger any 'release' event.
+  #       For workaround, use dispatch event to invoke auto-bump action
   workflow_dispatch:
-  workflow_call:
+    # Don't specify 'args' here. It's set by 'uses.with'
     inputs:
-      auto-bump:
+      ui-bump-version:
         type: string
-        required: false
+        required: true
+  workflow_call:   # Auto bump
+    inputs:
+      auto-bump-version:
+        type: string
+        required: true
+      auto-bump-args:
+        type: string
+        required: true
+        default: csproj=GlobalPackageVersion
         description: |
 
           Auto bump PR
@@ -39,7 +48,8 @@ on:
 #    uses: sator-imaging/.github/.github/workflows/Auto-dot-github.yml@main
 #    with:
 #      # See above
-#      auto-bump: csproj=MyDirectoryBuildPropsXmlTagName
+#      auto-bump-args: csproj=DirectoryBuildPropsXmlTagName
+#      auto-bump-version: ${{ inputs.ui-bump-version }}
 #    secrets: inherit
 #    permissions:
 #      pull-requests: write
@@ -360,10 +370,10 @@ jobs:
 
   auto-bump:
     name: 'Auto Bump on Draft Release Created'
-    if: ${{
-          github.event_name == 'release' &&
-          github.event.release.draft == true
-        }}
+    if: |
+      (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call')
+      && inputs.auto-bump-args
+      && inputs.auto-bump-version
 
     runs-on: ubuntu-slim
     steps:
@@ -376,12 +386,10 @@ jobs:
         run: |
           set -euo pipefail
 
-          VERSION="${{ github.event.release.tag_name }}"
+          VERSION="${{ inputs.auto-bump-version }}"
           VERSION="${VERSION#v}"
 
-          BUMP_ARGS="${{ inputs.auto-bump || '' }}"
-
-          BUMP_ARGS="csproj=GlobalPackageVersion"
+          BUMP_ARGS="${{ inputs.auto-bump-args }}"
 
           echo "===================================="
           echo "📝 Preparing Repository"

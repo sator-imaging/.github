@@ -286,14 +286,20 @@ jobs:
             found { print }
           ' <<< "$RELEASE_BODY")"
 
-          # @username / @username[bot]
+          # @username
           # → [@username](https://github.com/username)
+          # @username[bot]
+          # → [@username](https://github.com/username)[bot]
           RELEASE_BODY_CLEAN="$(perl -pe '
             s{
-              (?<![[:alnum:]_])
-              @([A-Za-z0-9-]+)(?:\[[^]]+\])?
+              (?<!\S)
+              @([^\s\[]+)
+              (\[[^\]]+\])?
             }
-            { "[" . "\@$1" . "](https://github.com/$1)" }gex
+            {
+              my ($u, $suffix) = ($1, $2 // "");
+              "[" . "\@$u" . "](https://github.com/$u)" . $suffix
+            }gex
           ' <<< "$RELEASE_BODY_CLEAN")"
 
           # GitHub PR URL → [#num](url)

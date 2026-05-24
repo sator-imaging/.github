@@ -92,7 +92,7 @@ jobs:
     name: 'Sync `.github` Folder Up to Date'
     if: |
       (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
-      && !auto-bump-version
+      && !inputs.auto-bump-version
 
     runs-on: ubuntu-slim
     steps:
@@ -244,7 +244,7 @@ jobs:
         (github.event_name == 'release' && github.event.action == 'published')
         || github.event_name == 'workflow_dispatch'
       )
-      && !auto-bump-version
+      && !inputs.auto-bump-version
 
     runs-on: ubuntu-slim
     steps:

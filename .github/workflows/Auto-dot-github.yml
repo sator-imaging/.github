@@ -167,7 +167,7 @@ jobs:
             --head "$BRANCH" \
             --base main \
             --fill \
-            || echo "::warning title=PR already exists::"
+            || echo "::warning title=PR already exists::Skipped"
 
   pr-labeler:
     name: 'Label for GH Release Notes'
@@ -375,7 +375,7 @@ jobs:
             --head "$BRANCH" \
             --base main \
             --fill \
-            || echo "::warning title=PR already exists::"
+            || echo "::warning title=PR already exists::Skipped"
 
   auto-bump:
     name: 'Auto Bump and Create PR'
@@ -494,4 +494,4 @@ jobs:
             --head "$BRANCH" \
             --base main \
             --fill \
-            || echo "::warning title=PR already exists::"
+            || echo "::warning title=PR already exists::Skipped"

@@ -362,7 +362,7 @@ jobs:
     name: 'Auto Bump on Draft Release Created'
     if: ${{
           github.event_name == 'release' &&
-          github.event.release.draft == true &&
+          github.event.release.draft == true
         }}
 
     runs-on: ubuntu-slim

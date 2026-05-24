@@ -458,8 +458,7 @@ jobs:
             escape() {
               printf '%s' "$1" | sed -E 's/[][(){}.^$*+?|\\]/\\&/g'
             }
-            CURRENT_VERSION="$(escape "$CURRENT_VERSION")"
-            BUMP_VERSION="$(escape "$BUMP_VERSION")"
+            ESCAPED_CURRENT_VERSION="$(escape "$CURRENT_VERSION")"
 
             ## Replace only exact matches of current version
             rg -l "\b${CURRENT_VERSION}\b" . \
@@ -468,7 +467,7 @@ jobs:
               --glob '!bin/**' \
               --glob '!obj/**' \
               --glob '!dist/**' |
-            xargs sed -i -E "s/\b${CURRENT_VERSION}\b/${BUMP_VERSION}/g"
+            xargs sed -i -E "s/\b${ESCAPED_CURRENT_VERSION}\b/${BUMP_VERSION}/g"
 
             echo "Version bump completed"
 

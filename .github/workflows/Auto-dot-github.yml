@@ -19,7 +19,6 @@ on:
       auto-bump:
         type: string
         required: false
-        default: 'csproj=GlobalPackageVersion'
         description: |
 
           Auto bump PR
@@ -364,7 +363,6 @@ jobs:
           github.event_name == 'release' &&
           github.event.action == 'created' &&
           github.event.release.draft == true &&
-          inputs.auto-bump &&
           github.event.release.tag_name
         }}
 
@@ -383,6 +381,8 @@ jobs:
           VERSION="${VERSION#v}"
 
           BUMP_ARGS="${{ inputs.auto-bump || '' }}"
+
+          BUMP_ARGS="csproj=GlobalPackageVersion"
 
           echo "===================================="
           echo "📝 Preparing Repository"

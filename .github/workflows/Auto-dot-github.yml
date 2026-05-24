@@ -11,8 +11,9 @@ on:
       - reopened
   release:
     types:
-      - published  # Auto changelog
-      - created    # Auto bump
+      - published  # Auto changelog | Auto bump
+      ## Workflows are not triggered for the created, edited, or deleted activity types for draft releases.
+      #- created    # Auto bump
   workflow_dispatch:
   workflow_call:
     inputs:
@@ -361,7 +362,7 @@ jobs:
     name: 'Auto Bump on Draft Release Created'
     if: ${{
           github.event_name == 'release' &&
-          github.event.action == 'created' &&
+          github.event.release.draft == true &&
           github.event.release.tag_name
         }}
 

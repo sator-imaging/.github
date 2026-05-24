@@ -168,7 +168,7 @@ jobs:
             || echo "::warning title=PR already exists::Skipped"
 
   pr-labeler:
-    name: 'Labeling for GH Release Notes'
+    name: 'Label for GH Release Notes'
     if: |
       github.event_name == 'pull_request'
 
@@ -277,8 +277,8 @@ jobs:
 
           echo "👉 Tag:  $RELEASE_TAG"
           echo "👉 URL:  $RELEASE_URL"
-          echo "👉 Body:"
-          echo "$RELEASE_BODY"
+          ###echo "👉 Body:"
+          ###echo "$RELEASE_BODY"
 
           # Remove '## What's Changed' including '<!-- Release notes generated using...'
           RELEASE_BODY_CLEAN="$(awk '
@@ -286,8 +286,11 @@ jobs:
             found { print }
           ' <<< "$RELEASE_BODY")"
 
+          echo "👉 Release body trimmed:"
+          printf "%s\n" "$RELEASE_BODY_CLEAN"
+
           # GitHub PR URL → [#num](url)
-          RELEASE_BODY_CLEAN="$(perl -pe '
+          RELEASE_BODY_CLEAN="$(printf "%s" "$RELEASE_BODY_CLEAN" | perl -pe '
             s{
               https://github\.com/([^/\s]+/[^/\s]+)/pull/([0-9]+)
             }{[#$2](https://github.com/$1/pull/$2)}gx;
@@ -296,20 +299,20 @@ jobs:
               (?<![[:alnum:]_])
               @([A-Za-z0-9-]+)(?:\[[^]]+\])?
             }{[@$1](https://github.com/$1)}gx
-          ' <<< "$RELEASE_BODY_CLEAN")"
+          ')"
 
-          echo "=== PR url replaced ================================="
+          echo "👉 PR url replaced:"
           printf "%s\n" "$RELEASE_BODY_CLEAN"
 
           # @username
           # → [@username](https://github.com/username)
           # @username[bot]
           # → [@username](https://github.com/username)[bot]
-          RELEASE_BODY_CLEAN="$(perl -pe '
+          RELEASE_BODY_CLEAN="$(printf "%s" "$RELEASE_BODY_CLEAN" | perl -pe '
             s/@([^\s\[]+)(\[[^\]]+\])?/\x5B\x40foo$1bar\x5D(https:\/\/github.com\/$1)$2/g;
-          ' <<< "$RELEASE_BODY_CLEAN")"
+          ')"
 
-          echo "=== @username replaced ================================="
+          echo "👉 @username replaced:"
           printf "%s\n" "$RELEASE_BODY_CLEAN"
 
           echo "===================================="

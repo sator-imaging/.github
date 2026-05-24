@@ -24,10 +24,10 @@ on:
     inputs:
       auto-bump-version:
         type: string
-        required: true
+        required: false  # False for backward compatibility
       auto-bump-args:
         type: string
-        required: true
+        required: false  # False for backward compatibility
         # DEBUG
         description: '**DEBUG**: NOT WORKING'
         default: csproj=GlobalPackageVersion

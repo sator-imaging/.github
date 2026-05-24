@@ -60,8 +60,10 @@ jobs:
   main:
     uses: sator-imaging/.github/.github/workflows/Auto-dot-github.yml@main
     with:
+
       # See above
-      auto-bump-args: $$$
+      auto-bump-args: $$$  # <-- UPDATE HERE
+
       auto-bump-version: ${{ inputs.auto-bump-version }}
     secrets: inherit
     permissions:

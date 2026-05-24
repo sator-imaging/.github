@@ -9,19 +9,14 @@ on:
       - edited
       - closed
       - reopened
-  release:
-    types:
-      - published  # Auto changelog
   # NOTE: draft release won't trigger any 'release' event.
   #       For workaround, use dispatch event to invoke auto-bump action
   workflow_dispatch:
     inputs:
-      auto-bump-version:
-        type: string
+      auto-bump:
+        type: boolean
+        default: false
         required: false
-        description: |
-          Specify version for Auto Bump.
-          Leave empty to invoke Sync and Auto Changelog.
       auto-bump-args:
         type: string
         required: false
@@ -30,8 +25,9 @@ on:
         default: csproj=GlobalPackageVersion
   workflow_call:   # Auto bump
     inputs:
-      auto-bump-version:
-        type: string
+      auto-bump:
+        type: boolean
+        default: false
         required: false  # False for backward compatibility
       auto-bump-args:
         type: string
@@ -55,14 +51,16 @@ on:
 #    uses: sator-imaging/.github/.github/workflows/Auto-dot-github.yml@main
 #    with:
 #
-#      # See above
-#      auto-bump-args: $$$  # <-- UPDATE HERE
 #
-#      auto-bump-version: ${{ inputs.auto-bump-version }}
+#      # See above
+#      auto-bump-args: $$$  ### <-- UPDATE HERE #######
+#
+#
+#      auto-bump: ${{ inputs.auto-bump }}
 #    secrets: inherit
 #    permissions:
 #      pull-requests: write
-#      contents: write  # Sync .github | Auto changelog | Auto bump
+#      contents: write  # Sync .github | Auto bump
 #      issues: write    # PR labeler
 
 
@@ -87,7 +85,7 @@ env:
   PR_NUMBER: ${{ github.event.pull_request.number }}
   MERGE_COMMIT_SHA: ${{ github.event.pull_request.merge_commit_sha }}
   REPO: ${{ github.repository }}
-  # Auto changelog
+  # Auto bump
   CHANGELOG_FILE: CHANGELOG.md
 
 
@@ -97,7 +95,7 @@ jobs:
     name: 'Sync `.github` Folder Up to Date'
     if: |
       (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
-      && !inputs.auto-bump-version
+      && !inputs.auto-bump
 
     runs-on: ubuntu-slim
     steps:
@@ -242,35 +240,32 @@ jobs:
               --add-label "$label"
           done
 
-  auto-changelog:
-    name: 'Auto Update CHANGELOG.md'
+  auto-bump:
+    name: 'Auto Bump and Update CHANGELOG.md'
     if: |
-      (
-        (github.event_name == 'release' && github.event.action == 'published')
-        || github.event_name == 'workflow_dispatch'
-      )
-      && !inputs.auto-bump-version
+      (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call')
+      && inputs.auto-bump
+      && inputs.auto-bump-args
 
     runs-on: ubuntu-slim
     steps:
 
+      ## Don't use 'sparse-checkout' here.
+      ## --> csproj mode targets all of text files.
       - uses: actions/checkout@v6
-        with:
-          sparse-checkout: |
-            ${{ env.CHANGELOG_FILE }}
-          sparse-checkout-cone-mode: true
 
       - name: Main
         run: |
           set -euo pipefail
+
+          BUMP_ARGS="${{ inputs.auto-bump-args }}"
 
           echo "===================================="
           echo "📦 Fetch latest release"
           echo "===================================="
 
           RELEASE_JSON="$(gh api repos/:owner/:repo/releases?per_page=3 \
-            --jq 'map(select(.draft == false)
-                  | {tagName: .tag_name, body: .body, url: .html_url})
+            --jq 'map({tagName: .tag_name, body: .body, url: .html_url, draft: .draft})
                   | .[0]' )"
 
           RELEASE_TAG="$(jq -r '.tagName' <<< "$RELEASE_JSON" | sed 's/^v//')"
@@ -300,7 +295,7 @@ jobs:
           fi
 
           echo "===================================="
-          echo "✏️ Update Files"
+          echo "✏️ Update Files Phase 1"
           echo "===================================="
 
           touch "$CHANGELOG_FILE"
@@ -355,74 +350,11 @@ jobs:
           head -n 20 "$CHANGELOG_FILE" || true
 
           echo "===================================="
-          echo "🚀 Creating Pull Request"
-          echo "===================================="
-
-          TS=$(date -u +"%Y%m%d-%H%M%S")
-
-          # Force push even if not allowed in .gitignore
-          git add -f "$CHANGELOG_FILE"
-          if ! git commit -m "[bot] Changelog ${RELEASE_TAG} ($TS)"; then
-            echo "::warning title=No changes::Skipping CHANGELOG update: ${RELEASE_TAG}"
-            exit 0
-          fi
-          git push -u origin "$BRANCH"
-
-          echo "📤 Branch pushed: $BRANCH"
-
-          # Create PR only if one doesn't already exist
-          gh pr create \
-            --head "$BRANCH" \
-            --base main \
-            --fill \
-            || echo "::warning title=PR already exists::Skipped"
-
-  auto-bump:
-    name: 'Auto Bump and Create PR'
-    if: |
-      (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call')
-      && inputs.auto-bump-args
-      && inputs.auto-bump-version
-
-    runs-on: ubuntu-slim
-    steps:
-
-      ## Don't use 'sparse-checkout' here.
-      ## --> csproj mode targets all of text files.
-      - uses: actions/checkout@v6
-
-      - name: Main
-        run: |
-          set -euo pipefail
-
-          BUMP_VERSION="${{ inputs.auto-bump-version }}"
-          BUMP_VERSION="${BUMP_VERSION#v}"
-
-          BUMP_ARGS="${{ inputs.auto-bump-args }}"
-
-          echo "===================================="
-          echo "📝 Preparing Repository"
-          echo "===================================="
-
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          BRANCH="bot/dot-github-${{ github.job }}"
-
-          # If remote branch exists → track it
-          git fetch origin
-          if git show-ref --verify --quiet "refs/remotes/origin/$BRANCH"; then
-            git checkout -B "$BRANCH" "origin/$BRANCH"
-          else
-            git checkout -b "$BRANCH"
-          fi
-
-          echo "===================================="
-          echo "✏️ Update Files"
+          echo "✏️ Update Files Phase 2"
           echo "===================================="
 
           ## Always run npm (safe even if repo isn't Node)
-          npm version "$BUMP_VERSION" --no-git-tag-version || true
+          npm version "$RELEASE_TAG" --no-git-tag-version || true
 
           ##
           ##   csproj update
@@ -467,7 +399,7 @@ jobs:
               --glob '!bin/**' \
               --glob '!obj/**' \
               --glob '!dist/**' |
-            xargs sed -i -E "s/\b${ESCAPED_CURRENT_VERSION}\b/${BUMP_VERSION}/g"
+            xargs sed -i -E "s/\b${ESCAPED_CURRENT_VERSION}\b/${RELEASE_TAG}/g"
 
             echo "Version bump completed"
 
@@ -481,7 +413,11 @@ jobs:
 
           # Don't include ignored files
           git add .
-          if ! git commit -m "[bot] Bump ${BUMP_VERSION} ($TS)"; then
+
+          # But force push CHANGELOG even if not allowed in .gitignore
+          git add -f "$CHANGELOG_FILE"
+
+          if ! git commit -m "[bot] Bump ${RELEASE_TAG} ($TS)"; then
             echo "::warning title=No changes::Bump skipped: ${CURRENT_VERSION}"
             exit 0
           fi

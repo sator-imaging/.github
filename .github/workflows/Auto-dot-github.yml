@@ -277,8 +277,8 @@ jobs:
 
           echo "👉 Tag:  $RELEASE_TAG"
           echo "👉 URL:  $RELEASE_URL"
-          echo "👉👉👉 Body:"
-          echo "$RELEASE_BODY"
+          echo "👉 Body (first 10 lines):"
+          echo "$RELEASE_BODY" | head -n 10
 
           echo "===================================="
           echo "📝 Preparing Repository"
@@ -314,9 +314,6 @@ jobs:
             found { print }
           ' <<< "$RELEASE_BODY")"
 
-          echo "👉👉👉 Release body trimmed:"
-          printf "%s\n" "$RELEASE_BODY_CLEAN"
-
           RELEASE_BODY_CLEAN="$(perl -pe '
             # GitHub PR URL → [#num](url)
             s{
@@ -327,11 +324,10 @@ jobs:
             # → [@username](https://github.com/username)
             # @username[bot]
             # → [@username](https://github.com/username)[bot]
-            s/@([^\s\[]+)(\[[^\]]+\])?/\x5B\x40foo$1bar\x5D(https:\/\/github.com\/$1)$2/g;
-          ' <<< "$RELEASE_BODY_CLEAN")"
 
-          echo "👉👉👉 PR url and @mention updated:"
-          printf "%s\n" "$RELEASE_BODY_CLEAN"
+            ## NOTE: '[@$1]' may cause problem. Use charcode instead.
+            s/@([^\s\[]+)(\[[^\]]+\])?/\x5B\x40$1\x5D(https:\/\/github.com\/$1)$2/g;
+          ' <<< "$RELEASE_BODY_CLEAN")"
 
           # Remove existing '# Changelog'
           CHANGELOG_BODY_CLEAN="$(awk '

@@ -228,6 +228,7 @@ jobs:
 
           if [ ${#labels[@]} -eq 0 ]; then
             echo "::warning title=No release-note label detected::PR title='$PR_TITLE' commit title='$COMMIT_TITLE'"
+            exit 0
           fi
 
           echo "🏷️ Detected Labels" >> $GITHUB_STEP_SUMMARY
@@ -274,8 +275,13 @@ jobs:
 
           echo "👉 Tag:  $RELEASE_TAG"
           echo "👉 URL:  $RELEASE_URL"
-          echo "👉 Body (first 10 lines):"
+          echo "👉 Body (top 10 lines):"
           echo "$RELEASE_BODY" | head -n 10
+
+          if [[ -z "$RELEASE_TAG" || -z "$RELEASE_BODY" || -z "$RELEASE_URL" ]]; then
+            echo "::warning title=Missing release data::tag/body/url is empty"
+            exit 0
+          fi
 
           echo "===================================="
           echo "📝 Preparing Repository"
@@ -301,52 +307,53 @@ jobs:
           touch "$CHANGELOG_FILE"
 
           if grep -Fq "## [${RELEASE_TAG}](https://github.com/" "$CHANGELOG_FILE"; then
-            echo "::warning title=Already exists::Skipping CHANGELOG update: ${RELEASE_TAG}"
-            exit 0
+            echo "::warning title=Already exists::Skipping Bump: ${RELEASE_TAG}"
+          else
+
+            # Remove '## What's Changed' including '<!-- Release notes generated using...'
+            RELEASE_BODY_CLEAN="$(awk '
+              /^##[[:space:]]/ { found=1; next }
+              found { print }
+            ' <<< "$RELEASE_BODY")"
+
+            RELEASE_BODY_CLEAN="$(perl -pe '
+              # GitHub PR URL → [#num](url)
+              s{
+                https://github\.com/([^/\s]+/[^/\s]+)/pull/([0-9]+)
+              }{[#$2](https://github.com/$1/pull/$2)}gx;
+
+              # @username
+              # → [@username](https://github.com/username)
+              # @username[bot]
+              # → [@username](https://github.com/username)[bot]
+
+              ## NOTE: '[' '@' '1' ']' sequence may cause problem. Use charcode instead.
+              s/@([^\s\[]+)(\[[^\]]+\])?/\x5B\x40$1\x5D(https:\/\/github.com\/$1)$2/g;
+            ' <<< "$RELEASE_BODY_CLEAN")"
+
+            # Remove existing '# Changelog'
+            CHANGELOG_BODY_CLEAN="$(awk '
+              /^#[[:space:]]/ { found=1; next }
+              found { print }
+            ' "$CHANGELOG_FILE")"
+
+            # Version format (no v prefix) is aligned to 'release-please'
+            {
+              echo "# Changelog"
+              echo
+              echo "## [${RELEASE_TAG}](${RELEASE_URL}) ($(date -u +'%Y-%m-%d'))"
+              echo
+              echo "$RELEASE_BODY_CLEAN"
+
+              if [ -n "$CHANGELOG_BODY_CLEAN" ]; then
+                echo
+                echo "$CHANGELOG_BODY_CLEAN"
+              fi
+            } > "$CHANGELOG_FILE"
+
           fi
 
-          # Remove '## What's Changed' including '<!-- Release notes generated using...'
-          RELEASE_BODY_CLEAN="$(awk '
-            /^##[[:space:]]/ { found=1; next }
-            found { print }
-          ' <<< "$RELEASE_BODY")"
-
-          RELEASE_BODY_CLEAN="$(perl -pe '
-            # GitHub PR URL → [#num](url)
-            s{
-              https://github\.com/([^/\s]+/[^/\s]+)/pull/([0-9]+)
-            }{[#$2](https://github.com/$1/pull/$2)}gx;
-
-            # @username
-            # → [@username](https://github.com/username)
-            # @username[bot]
-            # → [@username](https://github.com/username)[bot]
-
-            ## NOTE: '[' '@' '1' ']' sequence may cause problem. Use charcode instead.
-            s/@([^\s\[]+)(\[[^\]]+\])?/\x5B\x40$1\x5D(https:\/\/github.com\/$1)$2/g;
-          ' <<< "$RELEASE_BODY_CLEAN")"
-
-          # Remove existing '# Changelog'
-          CHANGELOG_BODY_CLEAN="$(awk '
-            /^#[[:space:]]/ { found=1; next }
-            found { print }
-          ' "$CHANGELOG_FILE")"
-
-          # Version format (no v prefix) is aligned to 'release-please'
-          {
-            echo "# Changelog"
-            echo
-            echo "## [${RELEASE_TAG}](${RELEASE_URL}) ($(date -u +'%Y-%m-%d'))"
-            echo
-            echo "$RELEASE_BODY_CLEAN"
-
-            if [ -n "$CHANGELOG_BODY_CLEAN" ]; then
-              echo
-              echo "$CHANGELOG_BODY_CLEAN"
-            fi
-          } > "$CHANGELOG_FILE"
-
-          echo "Preview (top 20 lines):"
+          echo "👉 CHANGELOG (top 10 lines):"
           head -n 20 "$CHANGELOG_FILE" || true
 
           echo "===================================="

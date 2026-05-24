@@ -435,6 +435,8 @@ jobs:
             ## Extract target property name from input: csproj=Version or similar
             PROPERTY_PATH="${BUMP_ARGS#csproj=}"
 
+            echo "PROPERTY_PATH = $PROPERTY_PATH"
+
             ## Read current value from first matching csproj/props file
             CURRENT_VALUE="$(
               rg -o "<${PROPERTY_PATH}>[^<]+</${PROPERTY_PATH}>" \
@@ -444,6 +446,8 @@ jobs:
               | head -n1 \
               | sed -E "s|</?${PROPERTY_PATH}>||g"
             )"
+
+            echo "CURRENT_VALUE = $CURRENT_VALUE"
 
             ## Fail fast if property is not found (prevents accidental global replace)
             if [[ -z "$CURRENT_VALUE" ]]; then
@@ -455,6 +459,8 @@ jobs:
             find . -type f \( -name "*.csproj" -o -name "*.props" \) -print0 |
               xargs -0 sed -i -E \
                 "s/\b${CURRENT_VALUE}\b/${VERSION}/g"
+
+            echo "Version bump completed"
 
           fi
 

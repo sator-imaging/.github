@@ -362,7 +362,6 @@ jobs:
     if: ${{
           github.event_name == 'release' &&
           github.event.action == 'created' &&
-          github.event.release.draft == true &&
           github.event.release.tag_name
         }}
 

@@ -462,13 +462,13 @@ jobs:
             BUMP_VERSION="$(escape "$BUMP_VERSION")"
 
             ## Replace only exact matches of current version
-            rg -lZ "\b${CURRENT_VERSION}\b" . \
+            rg -l "\b${CURRENT_VERSION}\b" . \
               --glob '!.git/**' \
               --glob '!node_modules/**' \
               --glob '!bin/**' \
               --glob '!obj/**' \
               --glob '!dist/**' |
-            xargs -0 sed -i -E "s/\b${CURRENT_VERSION}\b/${BUMP_VERSION}/g"
+            xargs sed -i -E "s/\b${CURRENT_VERSION}\b/${BUMP_VERSION}/g"
 
             echo "Version bump completed"
 

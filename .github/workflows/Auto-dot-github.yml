@@ -304,7 +304,7 @@ jobs:
           # → [@username](https://github.com/username)[bot]
           # NOTE: '[@$1]' may cause problem. Use charcode instead.
           RELEASE_BODY_CLEAN="$(perl -pe '
-            s/@([^\s\[]+)(\[[^\]]+\])?/\x5B\x40$1\x5D(https:\/\/github.com\/$1)$2/g;
+            s/@([^\s\[]+)(\[[^\]]+\])?/\x5B$1\x5D(https:\/\/github.com\/$1)$2/g;
           ' <<< "$RELEASE_BODY_CLEAN")"
 
           echo "===================================="

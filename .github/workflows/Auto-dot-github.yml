@@ -19,6 +19,7 @@ on:
       auto-bump:
         type: string
         required: false
+        default: 'csproj=GlobalPackageVersion'
         description: |
 
           Auto bump PR
@@ -382,8 +383,6 @@ jobs:
           VERSION="${VERSION#v}"
 
           BUMP_ARGS="${{ inputs.auto-bump || '' }}"
-          ## TEST
-          BUMP_ARGS="csproj=GlobalPackageVersion"
 
           echo "===================================="
           echo "📝 Preparing Repository"

@@ -292,13 +292,11 @@ jobs:
           # → [@username](https://github.com/username)[bot]
           RELEASE_BODY_CLEAN="$(perl -pe '
             s{
-              (?<!\S)
               @([^\s\[]+)
               (\[[^\]]+\])?
             }
             {
-              my ($u, $suffix) = ($1, $2 // "");
-              "[" . "\@$u" . "](https://github.com/$u)" . $suffix
+              "[" . "\@$1" . "](https://github.com/$1)" . ($2 // "")
             }gex
           ' <<< "$RELEASE_BODY_CLEAN")"
 

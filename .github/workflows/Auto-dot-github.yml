@@ -293,7 +293,7 @@ jobs:
               (?<![[:alnum:]_])
               @([A-Za-z0-9-]+)(?:\[[^]]+\])?
             }
-            { "[" . "\@$1" . "](https://github.com/$1)" }gex
+            { "[\@$1](https://github.com/$1)" }gex
           ' <<< "$RELEASE_BODY_CLEAN")"
 
           # GitHub PR URL → [#num](url)

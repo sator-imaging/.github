@@ -378,9 +378,12 @@ jobs:
         run: |
           set -euo pipefail
 
-          BUMP_ARGS="${{ inputs.auto-bump || '' }}"
           VERSION="${{ github.event.release.tag_name }}"
           VERSION="${VERSION#v}"
+
+          BUMP_ARGS="${{ inputs.auto-bump || '' }}"
+          ## TEST
+          BUMP_ARGS="csproj=GlobalPackageVersion"
 
           echo "===================================="
           echo "📝 Preparing Repository"

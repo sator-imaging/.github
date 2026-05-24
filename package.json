@@ -1,0 +1,54 @@
+{
+  "version": "2.0.1",
+  "name": "suggest-skills",
+  "description": "MCP server that suggests repository-specific AI agent skills.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sator-imaging/suggest-skills.git"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "suggest-skills": "dist/index.js"
+  },
+  "scripts": {
+    "build": "bun build --banner \"#!/usr/bin/env node\" src/index.ts --outdir ./dist --target node --drop console --drop debugger --minify --production",
+    "start": "bun src/index.ts",
+    "server": "bun src/index.ts server --port 3100",
+    "check": "bunx tsgo --noEmit && bunx oxlint",
+    "test": "bun run check && bun test"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "cac": "^7.0.0",
+    "ts-fibers": "0.5.3"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.13",
+    "@typescript/native-preview": "7.0.0-dev.20260521.1"
+  },
+  "packageManager": "bun@1.3.13",
+  "engines": {
+    "bun": ">=1.3.13"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/sator-imaging"
+  },
+  "author": {
+    "name": "sator-imaging",
+    "url": "https://x.com/sator_imaging"
+  },
+  "homepage": "https://x.com/sator_imaging",
+  "keywords": [
+    "AI",
+    "agent",
+    "agents",
+    "skill",
+    "skills",
+    "SKILL.md",
+    "DESIGN.md",
+    "mcp",
+    "modelcontextprotocol"
+  ]
+}

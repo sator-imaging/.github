@@ -299,7 +299,7 @@ jobs:
             # → [@username](https://github.com/username)
             # @username[bot]
             # → [@username](https://github.com/username)[bot]
-            s/@([^\s\[]+)(\[[^\]]+\])?/[@$1](https:\/\/github.com\/$1)$2/g;
+            s/@([^\s\[]+)(\[[^\]]+\])?/\x5B\x40foo$1bar\x5D(https:\/\/github.com\/$1)$2/g;
           ' <<< "$RELEASE_BODY_CLEAN")"
 
           echo "👉👉👉 PR url and @mention updated:"

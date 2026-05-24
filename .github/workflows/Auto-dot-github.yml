@@ -280,31 +280,6 @@ jobs:
           echo "👉👉👉 Body:"
           echo "$RELEASE_BODY"
 
-          # Remove '## What's Changed' including '<!-- Release notes generated using...'
-          RELEASE_BODY_CLEAN="$(awk '
-            /^##[[:space:]]/ { found=1; next }
-            found { print }
-          ' <<< "$RELEASE_BODY")"
-
-          echo "👉👉👉 Release body trimmed:"
-          printf "%s\n" "$RELEASE_BODY_CLEAN"
-
-          RELEASE_BODY_CLEAN="$(perl -pe '
-            # GitHub PR URL → [#num](url)
-            s{
-              https://github\.com/([^/\s]+/[^/\s]+)/pull/([0-9]+)
-            }{[#$2](https://github.com/$1/pull/$2)}gx;
-
-            # @username
-            # → [@username](https://github.com/username)
-            # @username[bot]
-            # → [@username](https://github.com/username)[bot]
-            s/@([^\s\[]+)(\[[^\]]+\])?/\x5B\x40foo$1bar\x5D(https:\/\/github.com\/$1)$2/g;
-          ' <<< "$RELEASE_BODY_CLEAN")"
-
-          echo "👉👉👉 PR url and @mention updated:"
-          printf "%s\n" "$RELEASE_BODY_CLEAN"
-
           echo "===================================="
           echo "📝 Preparing Repository"
           echo "===================================="
@@ -332,6 +307,31 @@ jobs:
             echo "::warning title=Already exists in CHANGELOG::Skipping update: ${RELEASE_TAG}"
             exit 0
           fi
+
+          # Remove '## What's Changed' including '<!-- Release notes generated using...'
+          RELEASE_BODY_CLEAN="$(awk '
+            /^##[[:space:]]/ { found=1; next }
+            found { print }
+          ' <<< "$RELEASE_BODY")"
+
+          echo "👉👉👉 Release body trimmed:"
+          printf "%s\n" "$RELEASE_BODY_CLEAN"
+
+          RELEASE_BODY_CLEAN="$(perl -pe '
+            # GitHub PR URL → [#num](url)
+            s{
+              https://github\.com/([^/\s]+/[^/\s]+)/pull/([0-9]+)
+            }{[#$2](https://github.com/$1/pull/$2)}gx;
+
+            # @username
+            # → [@username](https://github.com/username)
+            # @username[bot]
+            # → [@username](https://github.com/username)[bot]
+            s/@([^\s\[]+)(\[[^\]]+\])?/\x5B\x40foo$1bar\x5D(https:\/\/github.com\/$1)$2/g;
+          ' <<< "$RELEASE_BODY_CLEAN")"
+
+          echo "👉👉👉 PR url and @mention updated:"
+          printf "%s\n" "$RELEASE_BODY_CLEAN"
 
           # Remove existing '# Changelog'
           CHANGELOG_BODY_CLEAN="$(awk '

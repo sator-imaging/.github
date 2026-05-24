@@ -23,6 +23,7 @@ on:
         type: boolean
         default: false
         required: false
+        description: Create draft release before proceeding
       auto-bump-args:
         type: string
         required: false
@@ -55,21 +56,19 @@ on:
       # Backward compatibility
       auto-bump-version:
         type: string
+        default: ''
 
 jobs:
   main:
     uses: sator-imaging/.github/.github/workflows/Auto-dot-github.yml@main
-    with:
-
-
-      # See above
-      auto-bump-args: $$$  ### <-- UPDATE HERE #######
-
-
-      auto-bump: ${{ inputs.auto-bump }}
     secrets: inherit
     permissions:
       pull-requests: write
       contents: write  # Sync .github | Auto bump
       issues: write    # PR labeler
+    with:
+      auto-bump: ${{ inputs.auto-bump }}
+
+      # See above
+      auto-bump-args: $$$  ### <-- UPDATE HERE #######
 ```

@@ -429,6 +429,8 @@ jobs:
           ##   csproj update
           ##
           if [[ "$BUMP_ARGS" == csproj* ]]; then
+            sudo apt-get update
+            sudo apt-get install -y ripgrep
 
             ## Extract target property name from input: csproj=Version or similar
             PROPERTY_PATH="${BUMP_ARGS#csproj=}"

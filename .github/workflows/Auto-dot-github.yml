@@ -155,7 +155,7 @@ jobs:
           # Force push even if not allowed in .gitignore
           git add -f --ignore-removal "$TARGET_DIR"
           if ! git commit -m "[bot] Sync \`${TARGET_DIR}\` ($TS)"; then
-            echo "::warning title=No changes::Skipped"
+            echo "::warning title=No changes::Sync skipped"
             exit 0
           fi
           git push -u origin "$BRANCH"
@@ -165,7 +165,7 @@ jobs:
             --head "$BRANCH" \
             --base main \
             --fill \
-            || echo "::warning title=PR already exists::Skipped"
+            || echo "::warning title=PR already exists::Sync skipped"
 
   pr-labeler:
     name: 'Label for GH Release Notes'
@@ -304,7 +304,7 @@ jobs:
           touch "$CHANGELOG_FILE"
 
           if grep -Fq "## [${RELEASE_TAG}](https://github.com/" "$CHANGELOG_FILE"; then
-            echo "::warning title=Already exists in CHANGELOG::Skipping update: ${RELEASE_TAG}"
+            echo "::warning title=Already exists::Skipping CHANGELOG update: ${RELEASE_TAG}"
             exit 0
           fi
 
@@ -361,7 +361,7 @@ jobs:
           # Force push even if not allowed in .gitignore
           git add -f "$CHANGELOG_FILE"
           if ! git commit -m "[bot] Changelog ${RELEASE_TAG} ($TS)"; then
-            echo "::warning title=No changes::Skipped ${RELEASE_TAG}"
+            echo "::warning title=No changes::Skipping CHANGELOG update: ${RELEASE_TAG}"
             exit 0
           fi
           git push -u origin "$BRANCH"
@@ -373,7 +373,7 @@ jobs:
             --head "$BRANCH" \
             --base main \
             --fill \
-            || echo "::warning title=PR already exists::Skipped ${RELEASE_TAG}"
+            || echo "::warning title=PR already exists::Skipping CHANGELOG update: ${RELEASE_TAG}"
 
   auto-bump:
     name: 'Auto Bump and Create PR'
@@ -470,7 +470,7 @@ jobs:
           # Don't include ignored files
           git add .
           if ! git commit -m "[bot] Bump ${VERSION} ($TS)"; then
-            echo "::warning title=No changes::Skipped ${VERSION}"
+            echo "::warning title=No changes::Bump skipped: ${RELEASE_TAG}"
             exit 0
           fi
           git push -u origin "$BRANCH"
@@ -482,4 +482,4 @@ jobs:
             --head "$BRANCH" \
             --base main \
             --fill \
-            || echo "::warning title=PR already exists::Skipped ${VERSION}"
+            || echo "::warning title=PR already exists::Bump skipped: ${RELEASE_TAG}"

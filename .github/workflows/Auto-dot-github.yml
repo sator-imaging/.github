@@ -168,7 +168,7 @@ jobs:
             || echo "::warning title=PR already exists::Skipped"
 
   pr-labeler:
-    name: 'PR Labeler for GH Release Notes'
+    name: 'Labeling for GH Release Notes'
     if: |
       github.event_name == 'pull_request'
 
@@ -298,6 +298,9 @@ jobs:
             }{[@$1](https://github.com/$1)}gx
           ' <<< "$RELEASE_BODY_CLEAN")"
 
+          echo "=== PR url replaced ================================="
+          printf "%s\n" "$RELEASE_BODY_CLEAN"
+
           # @username
           # → [@username](https://github.com/username)
           # @username[bot]
@@ -305,6 +308,9 @@ jobs:
           RELEASE_BODY_CLEAN="$(perl -pe '
             s/@([^\s\[]+)(\[[^\]]+\])?/\x5B\x40foo$1bar\x5D(https:\/\/github.com\/$1)$2/g;
           ' <<< "$RELEASE_BODY_CLEAN")"
+
+          echo "=== @username replaced ================================="
+          printf "%s\n" "$RELEASE_BODY_CLEAN"
 
           echo "===================================="
           echo "📝 Preparing Repository"

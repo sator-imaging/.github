@@ -302,9 +302,8 @@ jobs:
           # → [@username](https://github.com/username)
           # @username[bot]
           # → [@username](https://github.com/username)[bot]
-          # NOTE: '[@$1]' may cause problem. Use charcode instead.
           RELEASE_BODY_CLEAN="$(perl -pe '
-            s/@([^\s\[]+)(\[[^\]]+\])?/\x5B$1\x5D(https:\/\/github.com\/$1)$2/g;
+            s/@([^\s\[]+)(\[[^\]]+\])?/\x5B\x40foo$1bar\x5D(https:\/\/github.com\/$1)$2/g;
           ' <<< "$RELEASE_BODY_CLEAN")"
 
           echo "===================================="
@@ -347,9 +346,7 @@ jobs:
             echo
             echo "## [${RELEASE_TAG}](${RELEASE_URL}) ($(date -u +'%Y-%m-%d'))"
             echo
-
-            # NOTE: echoing '[@' may cause problem.
-            printf '%s\n' "$RELEASE_BODY_CLEAN"
+            echo "$RELEASE_BODY_CLEAN"
 
             if [ -n "$CHANGELOG_BODY_CLEAN" ]; then
               echo

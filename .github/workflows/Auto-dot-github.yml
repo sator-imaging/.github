@@ -45,7 +45,7 @@ on:
             --> npm version "VERSION_WITHOUT_v_PREFIX" --no-git-tag-version
 
           - csproj=XmlTagName (e.g. csproj=MyVersionProperty)
-            Finds the current value from the first matching .csproj/.props file.
+            Finds the current version from the first matching .csproj/.props file.
             --> Then performs plain text replacement.
             --> NOTE: This is a naive string replacement (not XML-aware, not schema-aware).
                 Carefully review PR.
@@ -395,8 +395,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          VERSION="${{ inputs.auto-bump-version }}"
-          VERSION="${VERSION#v}"
+          BUMP_VERSION="${{ inputs.auto-bump-version }}"
+          BUMP_VERSION="${BUMP_VERSION#v}"
 
           BUMP_ARGS="${{ inputs.auto-bump-args }}"
 
@@ -422,7 +422,7 @@ jobs:
           echo "===================================="
 
           ## Always run npm (safe even if repo isn't Node)
-          npm version "$VERSION" --no-git-tag-version || true
+          npm version "$BUMP_VERSION" --no-git-tag-version || true
 
           ##
           ##   csproj update
@@ -436,27 +436,39 @@ jobs:
 
             echo "PROPERTY_PATH = $PROPERTY_PATH"
 
-            ## Read current value from first matching csproj/props file
-            CURRENT_VALUE="$(
+            ## Read current version from first matching csproj/props file
+            CURRENT_VERSION="$(
               rg -o "<${PROPERTY_PATH}>[^<]+</${PROPERTY_PATH}>" \
                 --no-filename \
+                -g "*.csproj" -g "*.props" \
                 . \
               | head -n1 \
               | sed -E "s|</?${PROPERTY_PATH}>||g"
             )"
 
-            echo "CURRENT_VALUE = $CURRENT_VALUE"
+            echo "CURRENT_VERSION = $CURRENT_VERSION"
 
             ## Fail fast if property is not found (prevents accidental global replace)
-            if [[ -z "$CURRENT_VALUE" ]]; then
+            if [[ -z "$CURRENT_VERSION" ]]; then
               echo "ERROR: Property '$PROPERTY_PATH' not found in csproj/props files"
               exit 1
             fi
 
-            ## Replace only exact matches of current value
-            find . -type f \( -name "*.csproj" -o -name "*.props" \) -print0 |
-              xargs -0 sed -i -E \
-                "s/\b${CURRENT_VALUE}\b/${VERSION}/g"
+            # Escape for regex
+            escape() {
+              printf '%s' "$1" | sed -E 's/[][(){}.^$*+?|\\]/\\&/g'
+            }
+            CURRENT_VERSION="$(escape "$CURRENT_VERSION")"
+            BUMP_VERSION="$(escape "$BUMP_VERSION")"
+
+            ## Replace only exact matches of current version
+            rg -lZ "\b${CURRENT_VERSION}\b" . \
+              --glob '!.git/**' \
+              --glob '!node_modules/**' \
+              --glob '!bin/**' \
+              --glob '!obj/**' \
+              --glob '!dist/**' |
+            xargs -0 sed -i -E "s/\b${CURRENT_VERSION}\b/${BUMP_VERSION}/g"
 
             echo "Version bump completed"
 
@@ -470,8 +482,8 @@ jobs:
 
           # Don't include ignored files
           git add .
-          if ! git commit -m "[bot] Bump ${VERSION} ($TS)"; then
-            echo "::warning title=No changes::Bump skipped: ${RELEASE_TAG}"
+          if ! git commit -m "[bot] Bump ${BUMP_VERSION} ($TS)"; then
+            echo "::warning title=No changes::Bump skipped: ${CURRENT_VERSION}"
             exit 0
           fi
           git push -u origin "$BRANCH"
@@ -483,4 +495,4 @@ jobs:
             --head "$BRANCH" \
             --base main \
             --fill \
-            || echo "::warning title=PR already exists::Bump skipped: ${RELEASE_TAG}"
+            || echo "::warning title=PR already exists::Bump skipped: ${CURRENT_VERSION}"

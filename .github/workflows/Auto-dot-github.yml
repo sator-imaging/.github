@@ -15,11 +15,16 @@ on:
   # NOTE: draft release won't trigger any 'release' event.
   #       For workaround, use dispatch event to invoke auto-bump action
   workflow_dispatch:
-    # Don't specify 'args' here. It's set by 'uses.with'
     inputs:
-      ui-bump-version:
+      auto-bump-version:
         type: string
         required: true
+      auto-bump-args:
+        type: string
+        required: true
+        # DEBUG
+        description: This parameter is used for debugging.
+        default: csproj=GlobalPackageVersion
   workflow_call:   # Auto bump
     inputs:
       auto-bump-version:
@@ -28,7 +33,6 @@ on:
       auto-bump-args:
         type: string
         required: true
-        default: csproj=GlobalPackageVersion
         description: |
 
           Auto bump PR
@@ -47,9 +51,9 @@ on:
 #  main:
 #    uses: sator-imaging/.github/.github/workflows/Auto-dot-github.yml@main
 #    with:
+#      auto-bump-version: ${{ inputs.auto-bump-version }}
 #      # See above
 #      auto-bump-args: csproj=DirectoryBuildPropsXmlTagName
-#      auto-bump-version: ${{ inputs.ui-bump-version }}
 #    secrets: inherit
 #    permissions:
 #      pull-requests: write
@@ -369,7 +373,7 @@ jobs:
             || echo "::warning title=PR already exists::Skipped ${RELEASE_TAG}"
 
   auto-bump:
-    name: 'Auto Bump on Draft Release Created'
+    name: 'Auto Bump and Create PR'
     if: |
       (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call')
       && inputs.auto-bump-args

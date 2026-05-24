@@ -290,8 +290,10 @@ jobs:
           # → [@username](https://github.com/username)
           # @username[bot]
           # → [@username](https://github.com/username)[bot]
-          RELEASE_BODY_CLEAN="$(printf '%s\n' "$RELEASE_BODY_CLEAN" | perl -pe '
-            s/@([^\s\[]+)(\[[^\]]+\])?/[@$1](https:\/\/github.com\/$1)$2/g
+          RELEASE_BODY_CLEAN="$(printf '%s' "$RELEASE_BODY_CLEAN" | perl -pe '
+            s/\x{00A0}/ /g;
+            s/\r//g;
+            s/@([^\s\[]+)(\[[^\]]+\])?/[@$1](https:\/\/github.com\/$1)$2/g;
           ')"
 
           # GitHub PR URL → [#num](url)

@@ -325,7 +325,7 @@ jobs:
             # @username[bot]
             # → [@username](https://github.com/username)[bot]
 
-            ## NOTE: '[@$1]' may cause problem. Use charcode instead.
+            ## NOTE: '[' '@' '1' ']' sequence may cause problem. Use charcode instead.
             s/@([^\s\[]+)(\[[^\]]+\])?/\x5B\x40$1\x5D(https:\/\/github.com\/$1)$2/g;
           ' <<< "$RELEASE_BODY_CLEAN")"
 

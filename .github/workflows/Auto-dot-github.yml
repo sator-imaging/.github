@@ -286,15 +286,6 @@ jobs:
             found { print }
           ' <<< "$RELEASE_BODY")"
 
-          # @username
-          # → [@username](https://github.com/username)
-          # @username[bot]
-          # → [@username](https://github.com/username)[bot]
-          ## NOTE: [@$1] is never working. Use charcode instead.
-          RELEASE_BODY_CLEAN="$(printf '%s' "$RELEASE_BODY_CLEAN" | perl -pe '
-            s/@([^\s\[]+)(\[[^\]]+\])?/\x5B\x40$1\x5D(https:\/\/github.com\/$1)$2/g;
-          ')"
-
           # GitHub PR URL → [#num](url)
           RELEASE_BODY_CLEAN="$(perl -pe '
             s{
@@ -306,6 +297,15 @@ jobs:
               @([A-Za-z0-9-]+)(?:\[[^]]+\])?
             }{[@$1](https://github.com/$1)}gx
           ' <<< "$RELEASE_BODY_CLEAN")"
+
+          # @username
+          # → [@username](https://github.com/username)
+          # @username[bot]
+          # → [@username](https://github.com/username)[bot]
+          ## NOTE: [@$1] is never working. Use charcode instead.
+          RELEASE_BODY_CLEAN="$(printf '%s' "$RELEASE_BODY_CLEAN" | perl -pe '
+            s/@([^\s\[]+)(\[[^\]]+\])?/\x5B\x40$1\x5D(https:\/\/github.com\/$1)$2/g;
+          ')"
 
           echo "===================================="
           echo "📝 Preparing Repository"

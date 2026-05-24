@@ -293,7 +293,7 @@ jobs:
           RELEASE_BODY_CLEAN="$(printf '%s' "$RELEASE_BODY_CLEAN" | perl -pe '
             s/\x{00A0}/ /g;
             s/\r//g;
-            s/@([^\s\[\]]+)(\[[^\]]+\])?/[@$1](https:\/\/github.com\/$1)$2/g;
+            s/(?<![A-Za-z0-9_])@([A-Za-z0-9_.-]+)(\[[^\]]+\])?/[@$1](https:\/\/github.com\/$1)$2/g;
           ')"
 
           # GitHub PR URL → [#num](url)

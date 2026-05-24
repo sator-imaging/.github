@@ -18,13 +18,27 @@ on:
   release:
     types:
       - published  # Auto changelog
-      - created    # Auto bump
+  # NOTE: draft release won't trigger any 'release' event.
+  #       For workaround, use dispatch event to invoke auto-bump action
   workflow_dispatch:
-  workflow_call:
     inputs:
-      auto-bump:
+      auto-bump-version:
         type: string
-        required: false
+        required: true
+      auto-bump-args:
+        type: string
+        required: true
+        # DEBUG
+        description: '**DEBUG**: NOT WORKING'
+        default: csproj=GlobalPackageVersion
+  workflow_call:   # Auto bump
+    inputs:
+      auto-bump-version:
+        type: string
+        required: true
+      auto-bump-args:
+        type: string
+        required: true
         description: |
 
           Auto bump PR
@@ -43,8 +57,9 @@ jobs:
   main:
     uses: sator-imaging/.github/.github/workflows/Auto-dot-github.yml@main
     with:
+      auto-bump-version: ${{ inputs.auto-bump-version }}
       # See above
-      auto-bump: csproj=MyDirectoryBuildPropsXmlTagName
+      auto-bump-args: csproj=DirectoryBuildPropsXmlTagName
     secrets: inherit
     permissions:
       pull-requests: write

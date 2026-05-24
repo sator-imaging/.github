@@ -23,7 +23,7 @@ on:
         type: string
         required: true
         # DEBUG
-        description: This parameter is used for debugging.
+        description: '**DEBUG**: NOT WORKING'
         default: csproj=GlobalPackageVersion
   workflow_call:   # Auto bump
     inputs:

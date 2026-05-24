@@ -46,6 +46,10 @@ on:
             --> NOTE: This is a naive string replacement (not XML-aware, not schema-aware).
                 Carefully review PR.
 
+      # Backward compatibility
+      auto-bump-version:
+        type: string
+
 #jobs:
 #  main:
 #    uses: sator-imaging/.github/.github/workflows/Auto-dot-github.yml@main

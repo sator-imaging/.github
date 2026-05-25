@@ -16,7 +16,8 @@ on:
       auto-bump:
         type: boolean
         default: false
-        description: Create draft release before proceeding
+        description: |
+          Auto Bump & CHANGELOG: Create draft release before proceeding
       auto-bump-args:
         type: string
         # DEBUG

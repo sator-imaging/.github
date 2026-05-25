@@ -264,13 +264,29 @@ jobs:
           echo "📦 Fetch latest release"
           echo "===================================="
 
-          RELEASE_JSON="$(gh api repos/:owner/:repo/releases?per_page=3 \
-            --jq 'map({tagName: .tag_name, body: .body, url: .html_url, draft: .draft})
-                  | .[0]' )"
 
-          RELEASE_TAG="$(jq -r '.tagName' <<< "$RELEASE_JSON" | sed 's/^v//')"
+          RELEASE_JSON="$(
+            gh api repos/:owner/:repo/releases?per_page=3 \
+              --jq 'map({
+                tagName: .tag_name,
+                body: .body,
+                url: .html_url,
+                draft: .draft
+              }) | .[0]'
+          )"
+
+          # Don't remove 'v' prefix here.
+          RELEASE_TAG="$(jq -r '.tagName' <<< "$RELEASE_JSON")"
           RELEASE_BODY="$(jq -r '.body' <<< "$RELEASE_JSON")"
           RELEASE_URL="$(jq -r '.url' <<< "$RELEASE_JSON")"
+
+          # NOTE: This workflow based on a draft release so the url has a tag like 'untagged-{hash}'.
+          #       Need to rebuild release url using tag.
+          REPO_FULL_NAME="$(gh repo view --json nameWithOwner -q '.nameWithOwner')"
+          RELEASE_URL="https://github.com/${REPO_FULL_NAME}/releases/tag/${RELEASE_TAG}"
+
+          # Then, remove 'v' prefix.
+          RELEASE_TAG="${RELEASE_TAG#v}"
 
           echo "👉 Tag:  $RELEASE_TAG"
           echo "👉 URL:  $RELEASE_URL"
@@ -423,7 +439,7 @@ jobs:
           # But force push CHANGELOG even if not allowed in .gitignore
           git add -f "$CHANGELOG_FILE"
 
-          if ! git commit -m "[bot] Bump ${RELEASE_TAG} ($TS)"; then
+          if ! git commit -m "[bot] Bump \`${RELEASE_TAG}\` ($TS)"; then
             echo "::warning title=No changes::Bump skipped: ${CURRENT_VERSION}"
             exit 0
           fi

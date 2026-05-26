@@ -217,6 +217,10 @@ jobs:
             labels+=("documentation")
           fi
 
+          if matches_pattern '^\[?bot[:\]]'; then
+            labels+=("bot")
+          fi
+
           if matches_pattern '^[a-z]+(\(.+\))?!:'; then
             labels+=("breaking-change")
           fi

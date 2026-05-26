@@ -152,11 +152,11 @@ jobs:
           TS=$(date -u +"%Y%m%d-%H%M%S")
 
           # Force push even if not allowed in .gitignore
-          if ! git add -f --ignore-removal "$TARGET_DIR"; then
+          git add -f --ignore-removal "$TARGET_DIR"
+          if ! git commit -m "[bot] Sync \`${TARGET_DIR}\` ($TS)"; then
             echo "::warning title=No changes::Sync skipped"
             exit 0
           fi
-          git commit -m "[bot] Sync \`${TARGET_DIR}\` ($TS)"
           git push -u origin "$BRANCH"
 
           # Create PR only if one doesn't already exist
@@ -295,7 +295,7 @@ jobs:
 
           if [[ -z "$RELEASE_TAG" || -z "$RELEASE_BODY" || -z "$RELEASE_URL" ]]; then
             echo "::warning title=Missing release data::tag/body/url is empty"
-            exit 0
+            exit 1
           fi
 
           echo "===================================="
@@ -437,11 +437,11 @@ jobs:
           git add .
 
           # But force push CHANGELOG even if not allowed in .gitignore
-          if ! git add -f "$CHANGELOG_FILE"; then
+          git add -f "$CHANGELOG_FILE"
+          if ! git commit -m "[bot] Bump \`${RELEASE_TAG}\` ($TS)"; then
             echo "::warning title=No changes::Bump skipped: ${CURRENT_VERSION}"
             exit 0
           fi
-          git commit -m "[bot] Bump \`${RELEASE_TAG}\` ($TS)"
           git push -u origin "$BRANCH"
 
           echo "📤 Branch pushed: $BRANCH"

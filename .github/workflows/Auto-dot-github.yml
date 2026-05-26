@@ -196,10 +196,8 @@ jobs:
             COMMIT_TITLE=""
           fi
 
-          {
-            echo "📦 PR title: $PR_TITLE"
-            echo "🔀 Merge commit title: $COMMIT_TITLE"
-          } >> $GITHUB_STEP_SUMMARY
+          echo "📦 PR title: $PR_TITLE"
+          echo "🔀 Merge commit title: $COMMIT_TITLE"
 
           ## Labels chosen for GH Release Notes Generation
 
@@ -217,7 +215,8 @@ jobs:
             labels+=("documentation")
           fi
 
-          if matches_pattern '^\[?bot[:\]]'; then
+          # Use '^(...|...)' for stability
+          if matches_pattern '^(\[bot\]|bot:)'; then
             labels+=("bot")
           fi
 
@@ -232,10 +231,10 @@ jobs:
             exit 0
           fi
 
-          echo "🏷️ Detected Labels" >> $GITHUB_STEP_SUMMARY
+          echo "🏷️ Detected Labels"
 
           for label in "${labels[@]}"; do
-            echo "- $label" >> $GITHUB_STEP_SUMMARY
+            echo "- $label"
 
             gh issue edit "$PR_NUMBER" \
               --repo "$REPO" \

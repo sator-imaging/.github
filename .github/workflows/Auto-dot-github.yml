@@ -14,10 +14,9 @@ on:
   workflow_dispatch:
     inputs:
       auto-bump:
-        type: boolean
-        default: false
+        type: string
         description: |
-          Auto Bump & CHANGELOG: Create draft release before proceeding
+          Auto Bump & CHANGELOG: Enter 'v'-starting semver. Leave empty to Sync.
       auto-bump-args:
         type: string
         # DEBUG
@@ -26,8 +25,7 @@ on:
   workflow_call:   # Auto bump
     inputs:
       auto-bump:
-        type: boolean
-        default: false
+        type: string
       auto-bump-args:
         type: string
         description: |
@@ -44,7 +42,7 @@ on:
             --> NOTE: This is a naive string replacement (not XML-aware, not schema-aware).
                 Carefully review PR.
 
-      # Backward compatibility
+      # Backward compatibility (May 2026)
       auto-bump-version:
         type: string
 
@@ -57,7 +55,7 @@ on:
 #      contents: write  # Sync .github | Auto bump
 #      issues: write    # PR labeler
 #    with:
-#      auto-bump: ${{ inputs.auto-bump || false }}
+#      auto-bump: ${{ inputs.auto-bump }}
 #
 #      # See above
 #      auto-bump-args: ${{}}  ### <-- UPDATE HERE #######
@@ -244,11 +242,16 @@ jobs:
     name: 'Auto Bump and Update CHANGELOG.md'
     if: |
       (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call')
-      && inputs.auto-bump
+      && inputs.auto-bump && startsWith(inputs.auto-bump, 'v')
       && inputs.auto-bump-args
 
     runs-on: ubuntu-slim
     steps:
+      - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65  # v2.6.2
+        with:
+          tag_name: ${{ inputs.auto-bump }}
+          draft: true
+          generate_release_notes: true
 
       ## Don't use 'sparse-checkout' here.
       ## --> csproj mode targets all of text files.

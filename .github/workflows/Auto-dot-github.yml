@@ -153,7 +153,7 @@ jobs:
 
           # Force push even if not allowed in .gitignore
           git add -f --ignore-removal "$TARGET_DIR"
-          if ! git commit -m "[bot] Sync \`${TARGET_DIR}\` ($TS)"; then
+          if ! git commit -m "[bot] 🔄 Sync \`${TARGET_DIR}\` ($TS)"; then
             echo "::warning title=No changes::Sync skipped"
             exit 0
           fi
@@ -438,7 +438,7 @@ jobs:
 
           # But force push CHANGELOG even if not allowed in .gitignore
           git add -f "$CHANGELOG_FILE"
-          if ! git commit -m "[bot] Bump \`${RELEASE_TAG}\` ($TS)"; then
+          if ! git commit -m "[bot] 🔼 Bump \`${RELEASE_TAG}\` ($TS)"; then
             echo "::warning title=No changes::Bump skipped: ${CURRENT_VERSION}"
             exit 0
           fi

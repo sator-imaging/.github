@@ -437,6 +437,7 @@ jobs:
             ## Replace only exact matches of current version
             rg -l "\b${CURRENT_VERSION}\b" . \
               --glob '!.git/**' \
+              --glob '!CHANGELOG.md' \
               --glob '!node_modules/**' \
               --glob '!bin/**' \
               --glob '!obj/**' \

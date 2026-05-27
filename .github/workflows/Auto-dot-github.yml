@@ -92,7 +92,7 @@ jobs:
     name: 'Sync `.github` Folder Up to Date'
     if: |
       (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
-      && !inputs.auto-bump
+      && (!inputs.auto-bump || !startsWith(inputs.auto-bump, 'v'))
 
     runs-on: ubuntu-slim
     steps:

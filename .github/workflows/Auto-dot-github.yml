@@ -236,7 +236,10 @@ jobs:
           for label in "${labels[@]}"; do
             echo "- $label"
 
-            gh issue edit "$PR_NUMBER" \
+            # Fails if label doesn't exist
+            gh label create "$label" --repo "$REPO" || true
+
+            gh pr edit "$PR_NUMBER" \
               --repo "$REPO" \
               --add-label "$label"
           done

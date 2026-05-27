@@ -253,11 +253,22 @@ jobs:
 
     runs-on: ubuntu-slim
     steps:
+      - name: Check tag-associated GH release existence
+        run: |
+          set -euo pipefail
+
+          TAG="${{ inputs.auto-bump }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "::error title=Tag conflict::GH release for tag '$TAG' already exists"
+            exit 1
+          fi
+
       - uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda  # v3.0.0
         with:
           tag_name: ${{ inputs.auto-bump }}
           draft: true
           generate_release_notes: true
+          make_latest: true
 
       ## Don't use 'sparse-checkout' here.
       ## --> csproj mode targets all of text files.

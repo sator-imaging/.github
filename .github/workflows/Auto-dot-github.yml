@@ -152,7 +152,7 @@ jobs:
           # Force push even if not allowed in .gitignore
           git add -f --ignore-removal "$TARGET_DIR"
           if ! git commit -m "[bot] 🔄 Sync \`${TARGET_DIR}\` ($TS)"; then
-            echo "::warning title=No changes::Sync skipped"
+            echo "::warning title=No changes::Skipping .github sync"
             exit 0
           fi
           git push -u origin "$BRANCH"

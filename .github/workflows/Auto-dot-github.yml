@@ -188,6 +188,9 @@ jobs:
 
           ## Get a merge commit title
 
+          # Resolve squash merge
+          MERGE_COMMIT_SHA=$(gh pr view "$PR_NUMBER" --json mergeCommit --jq '.mergeCommit.oid')
+
           if [ -n "$MERGE_COMMIT_SHA" ]; then
             COMMIT_TITLE=$(gh api \
               repos/$REPO/commits/$MERGE_COMMIT_SHA \
@@ -197,7 +200,7 @@ jobs:
           fi
 
           echo "📦 PR title: $PR_TITLE"
-          echo "🔀 Merge commit title: $COMMIT_TITLE"
+          echo "🔀 Commit title: $COMMIT_TITLE"
 
           ## Labels chosen for GH Release Notes Generation
 
@@ -227,7 +230,7 @@ jobs:
           ## Add detected labels or log warning
 
           if [ ${#labels[@]} -eq 0 ]; then
-            echo "::warning title=No release-note label detected::PR title='$PR_TITLE' commit title='$COMMIT_TITLE'"
+            echo "::warning title=No release-note label detected::PR='$PR_TITLE' | commit='$COMMIT_TITLE'"
             exit 0
           fi
 

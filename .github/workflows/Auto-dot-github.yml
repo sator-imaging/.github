@@ -189,7 +189,10 @@ jobs:
           ## Get a merge commit title
 
           # Resolve squash merge
-          RESOLVED_MERGE_SHA=$(gh pr view "$PR_NUMBER" --json mergeCommit --jq '.mergeCommit.oid')
+          RESOLVED_MERGE_SHA=$(gh pr view "$PR_NUMBER" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json mergeCommit \
+            --jq '.mergeCommit.oid')
 
           if [ -n "$RESOLVED_MERGE_SHA" ] && [ "$RESOLVED_MERGE_SHA" != "null" ]; then
             MERGE_COMMIT_SHA="$RESOLVED_MERGE_SHA"

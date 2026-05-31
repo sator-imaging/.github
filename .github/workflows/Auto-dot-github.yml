@@ -237,7 +237,7 @@ jobs:
           echo "🏷️ Detected Labels"
 
           for label in "${labels[@]}"; do
-            echo "- $label"
+            echo "    - $label"
 
             # Fails if label doesn't exist
             gh label create "$label" --repo "$REPO" || true

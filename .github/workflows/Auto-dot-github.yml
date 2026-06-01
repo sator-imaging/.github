@@ -355,11 +355,15 @@ jobs:
             echo "::warning title=Already exists::Skipping Bump: ${RELEASE_TAG}"
           else
 
-            # Remove '## What's Changed' including '<!-- Release notes generated using...'
+            # Remove first level 2 heading (e.g., '## What's Changed') including '<!-- Release notes generated using...'
             RELEASE_BODY_CLEAN="$(awk '
               /^##[[:space:]]/ { found=1; next }
               found { print }
             ' <<< "$RELEASE_BODY")"
+
+            echo "===================================="
+            printf '%s\n' "$RELEASE_BODY_CLEAN"
+            echo "===================================="
 
             RELEASE_BODY_CLEAN="$(perl -pe '
               # GitHub PR URL → [#num](url)
@@ -375,6 +379,10 @@ jobs:
               ## NOTE: '[' '@' '1' ']' sequence may cause problem. Use charcode instead.
               s/@([^\s\[]+)(\[[^\]]+\])?/\x5B\x40$1\x5D(https:\/\/github.com\/$1)$2/g;
             ' <<< "$RELEASE_BODY_CLEAN")"
+
+            echo "===================================="
+            printf '%s\n' "$RELEASE_BODY_CLEAN"
+            echo "===================================="
 
             # Remove existing '# Changelog'
             CHANGELOG_BODY_CLEAN="$(awk '

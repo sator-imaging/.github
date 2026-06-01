@@ -355,6 +355,10 @@ jobs:
             echo "::warning title=Already exists::Skipping Bump: ${RELEASE_TAG}"
           else
 
+            echo "===================================="
+            printf '%s\n' "$RELEASE_BODY"
+            echo "===================================="
+
             # Remove first level 2 heading (e.g., '## What's Changed') including '<!-- Release notes generated using...'
             RELEASE_BODY_CLEAN="$(awk '
               /^##[[:space:]]/ { found=1; next }

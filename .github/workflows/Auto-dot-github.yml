@@ -355,19 +355,13 @@ jobs:
             echo "::warning title=Already exists::Skipping Bump: ${RELEASE_TAG}"
           else
 
-            echo "===================================="
-            printf '%s\n' "$RELEASE_BODY"
-            echo "===================================="
-
             # Remove first level 2 heading (e.g., '## What's Changed') including '<!-- Release notes generated using...'
             RELEASE_BODY_CLEAN="$(awk '
               !found && /^##[[:space:]]/ { found=1; next }
               found { print }
             ' <<< "$RELEASE_BODY")"
 
-            echo "===================================="
-            printf '%s\n' "$RELEASE_BODY_CLEAN"
-            echo "===================================="
+            RELEASE_BODY_CLEAN="$(printf '%s\n' "$RELEASE_BODY_CLEAN" | sed 's/^##[[:space:]]*/### :octocat: /')"
 
             RELEASE_BODY_CLEAN="$(perl -pe '
               # GitHub PR URL → [#num](url)

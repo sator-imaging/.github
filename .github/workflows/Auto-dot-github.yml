@@ -361,7 +361,7 @@ jobs:
               found { print }
             ' <<< "$RELEASE_BODY")"
 
-            RELEASE_BODY_CLEAN="$(printf '%s\n' "$RELEASE_BODY_CLEAN" | sed 's/^##[[:space:]]/### :octocat: /')"
+            RELEASE_BODY_CLEAN="$(printf '%s' "$RELEASE_BODY_CLEAN" | sed 's/^##[[:space:]]/### 🎉 /')"
 
             RELEASE_BODY_CLEAN="$(perl -pe '
               # GitHub PR URL → [#num](url)

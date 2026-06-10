@@ -228,6 +228,10 @@ jobs:
             labels+=("documentation")
           fi
 
+          if matches_pattern '^deps[:(]'; then
+            labels+=("dependencies")
+          fi
+
           # Use '^(...|...)' for stability
           if matches_pattern '^(\[bot\]|bot:)'; then
             labels+=("bot")

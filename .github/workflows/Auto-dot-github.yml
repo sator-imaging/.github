@@ -477,6 +477,9 @@ jobs:
           ##   Update version by string-based replacement
           ##
           if [[ -n "$CURRENT_VERSION" && "$CURRENT_VERSION" != "$RELEASE_TAG" ]]; then
+
+            echo "Starting text-based version bump"
+
             installRipgrep
 
             # Escape for regex
@@ -484,6 +487,8 @@ jobs:
               printf '%s' "$1" | sed -E 's/[][(){}.^$*+?|\\]/\\&/g'
             }
             ESCAPED_CURRENT_VERSION="$(escape "$CURRENT_VERSION")"
+
+            echo "  Executing rg..."
 
             ## Replace only exact matches of current version
             ## --> Ignore workspace root package*.json as it was updated by npm command
@@ -497,11 +502,15 @@ jobs:
               --glob '!dist/**' \
             )
 
+            echo "  Checking rg status..."
+
             # Ignore no match error
             rg_status=$?
             if [ $rg_status -ne 0 ] && [ $rg_status -ne 1 ]; then
               exit $rg_status
             fi
+
+            echo "  Executing sed..."
 
             if [ -n "$replaceTargets" ]; then
               echo "$replaceTargets" \

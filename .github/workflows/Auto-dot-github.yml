@@ -363,58 +363,58 @@ jobs:
 
           touch "$CHANGELOG_FILE"
 
-          if grep -Fq "## [${RELEASE_TAG}](https://github.com/" "$CHANGELOG_FILE"; then
-            echo "::warning title=Already exists::Skipping Bump: ${RELEASE_TAG}"
-          else
+          # Remove first level 2 heading (e.g., '## What's Changed') including '<!-- Release notes generated using...'
+          RELEASE_BODY_CLEAN="$(awk '
+            !found && /^##[[:space:]]/ { found=1; next }
+            found { print }
+          ' <<< "$RELEASE_BODY")"
 
-            # Remove first level 2 heading (e.g., '## What's Changed') including '<!-- Release notes generated using...'
-            RELEASE_BODY_CLEAN="$(awk '
-              !found && /^##[[:space:]]/ { found=1; next }
-              found { print }
-            ' <<< "$RELEASE_BODY")"
+          RELEASE_BODY_CLEAN="$(printf '%s' "$RELEASE_BODY_CLEAN" | sed 's/^##[[:space:]]/### 🎉 /')"
 
-            RELEASE_BODY_CLEAN="$(printf '%s' "$RELEASE_BODY_CLEAN" | sed 's/^##[[:space:]]/### 🎉 /')"
+          RELEASE_BODY_CLEAN="$(perl -pe '
+            # GitHub PR URL → [#num](url)
+            s{
+              https://github\.com/([^/\s]+/[^/\s]+)/pull/([0-9]+)
+            }{[#$2](https://github.com/$1/pull/$2)}gx;
 
-            RELEASE_BODY_CLEAN="$(perl -pe '
-              # GitHub PR URL → [#num](url)
-              s{
-                https://github\.com/([^/\s]+/[^/\s]+)/pull/([0-9]+)
-              }{[#$2](https://github.com/$1/pull/$2)}gx;
+            # @username
+            # → [@username](https://github.com/username)
+            # @username[bot]
+            # → [@username](https://github.com/username)[bot]
 
-              # @username
-              # → [@username](https://github.com/username)
-              # @username[bot]
-              # → [@username](https://github.com/username)[bot]
+            ## NOTE: '[' '@' '1' ']' sequence may cause problem. Use charcode instead.
+            s/@([^\s\[]+)(\[[^\]]+\])?/\x5B\x40$1\x5D(https:\/\/github.com\/$1)$2/g;
+          ' <<< "$RELEASE_BODY_CLEAN")"
 
-              ## NOTE: '[' '@' '1' ']' sequence may cause problem. Use charcode instead.
-              s/@([^\s\[]+)(\[[^\]]+\])?/\x5B\x40$1\x5D(https:\/\/github.com\/$1)$2/g;
-            ' <<< "$RELEASE_BODY_CLEAN")"
+          echo "===================================="
+          printf '%s\n' "$RELEASE_BODY_CLEAN"
+          echo "===================================="
 
-            echo "===================================="
-            printf '%s\n' "$RELEASE_BODY_CLEAN"
-            echo "===================================="
+          # Remove existing '# Changelog'
+          CHANGELOG_BODY_CLEAN="$(awk '
+            /^#[[:space:]]/ { found=1; next }
+            found { print }
+          ' "$CHANGELOG_FILE")"
 
-            # Remove existing '# Changelog'
-            CHANGELOG_BODY_CLEAN="$(awk '
-              /^#[[:space:]]/ { found=1; next }
-              found { print }
-            ' "$CHANGELOG_FILE")"
+          # Keep everything from ## [RELEASE_TAG] onward (including that line)
+          CHANGELOG_BODY_CLEAN="$(printf "%s\n" "$CHANGELOG_BODY_CLEAN" | awk -v v="$RELEASE_TAG" '
+            $0 ~ "^## \\[" v "\\]" { found=1 }
+            found { print }
+          ')"
 
-            # Version format (no v prefix) is aligned to 'release-please'
-            {
-              echo "# Changelog"
+          # Version format (no v prefix) is aligned to 'release-please'
+          {
+            echo "# Changelog"
+            echo
+            echo "## [${RELEASE_TAG}](${RELEASE_URL}) ($(date -u +'%Y-%m-%d'))"
+            echo
+            echo "$RELEASE_BODY_CLEAN"
+
+            if [ -n "$CHANGELOG_BODY_CLEAN" ]; then
               echo
-              echo "## [${RELEASE_TAG}](${RELEASE_URL}) ($(date -u +'%Y-%m-%d'))"
-              echo
-              echo "$RELEASE_BODY_CLEAN"
-
-              if [ -n "$CHANGELOG_BODY_CLEAN" ]; then
-                echo
-                echo "$CHANGELOG_BODY_CLEAN"
-              fi
-            } > "$CHANGELOG_FILE"
-
-          fi
+              echo "$CHANGELOG_BODY_CLEAN"
+            fi
+          } > "$CHANGELOG_FILE"
 
           echo "👉 CHANGELOG (top 10 lines):"
           head -n 20 "$CHANGELOG_FILE" || true

@@ -482,15 +482,26 @@ jobs:
 
             ## Replace only exact matches of current version
             ## --> Ignore workspace root package*.json as it was updated by npm command
-            rg -l "\b${CURRENT_VERSION}\b" . \
+            replaceTargets=$(rg -l "\b${CURRENT_VERSION}\b" . \
               --glob '!/package*.json' \
               --glob '!.git/**' \
               --glob '!CHANGELOG.md' \
               --glob '!node_modules/**' \
               --glob '!bin/**' \
               --glob '!obj/**' \
-              --glob '!dist/**' |
-            xargs -r sed -i -E "s/\b${ESCAPED_CURRENT_VERSION}\b/${RELEASE_TAG}/g"
+              --glob '!dist/**' \
+            )
+
+            # Ignore no match error
+            rg_status=$?
+            if [ $rg_status -ne 0 ] && [ $rg_status -ne 1 ]; then
+              exit $rg_status
+            fi
+
+            if [ -n "$replaceTargets" ]; then
+              echo "$replaceTargets" \
+                | xargs -d '\n' sed -i -E "s/\b${ESCAPED_CURRENT_VERSION}\b/${RELEASE_TAG}/g"
+            fi
 
             echo "Version bump completed"
 

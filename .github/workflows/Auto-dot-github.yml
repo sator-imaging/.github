@@ -398,8 +398,9 @@ jobs:
 
           # Keep everything from ## [RELEASE_TAG] onward (including that line)
           CHANGELOG_BODY_CLEAN="$(printf "%s\n" "$CHANGELOG_BODY_CLEAN" | awk -v v="$RELEASE_TAG" '
-            $0 ~ "^## \\[" v "\\]" { found=1 }
-            found { print }
+            $0 ~ "^## \\[" v "\\]" { skip=1; next }
+            skip && $0 ~ "^## \\[" { skip=0 }
+            !skip { print }
           ')"
 
           # Version format (no v prefix) is aligned to 'release-please'

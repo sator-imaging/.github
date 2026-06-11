@@ -490,7 +490,7 @@ jobs:
               --glob '!bin/**' \
               --glob '!obj/**' \
               --glob '!dist/**' |
-            xargs sed -i -E "s/\b${ESCAPED_CURRENT_VERSION}\b/${RELEASE_TAG}/g"
+            xargs -r sed -i -E "s/\b${ESCAPED_CURRENT_VERSION}\b/${RELEASE_TAG}/g"
 
             echo "Version bump completed"
 

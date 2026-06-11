@@ -500,6 +500,7 @@ jobs:
               --glob '!bin/**' \
               --glob '!obj/**' \
               --glob '!dist/**' \
+              || true
             )
 
             echo "  Checking rg status..."

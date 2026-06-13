@@ -433,10 +433,17 @@ jobs:
           echo "✏️ Update Files Phase 2"
           echo "===================================="
 
-          installRipgrep() {
-            if ! command -v rg >/dev/null 2>&1; then
-              sudo apt-get update
-              sudo apt-get install -y ripgrep
+          APT_UPDATED=0
+
+          install_pkg() {
+            pkg="$1"
+
+            if ! command -v "$pkg" >/dev/null 2>&1; then
+              if [ "$APT_UPDATED" -eq 0 ]; then
+                sudo apt-get update
+                APT_UPDATED=1
+              fi
+              sudo apt-get install -y "$pkg"
             fi
           }
 
@@ -451,13 +458,23 @@ jobs:
             ## Always run npm (safe even if repo isn't Node)
             ## Note that workspace root package*.json is updated here, string-based replacement follows.
             npm version "$RELEASE_TAG" --no-git-tag-version || true
+
+            ## After lock file update,
+            ## We need to revert package.json to prevent git diff noise
+            git restore --source=HEAD -- package.json \
+              || true
+
+            install_pkg jq
+            tmp="$(mktemp)"
+            jq --arg v "$RELEASE_TAG" '.version=$v' package.json > "$tmp" \
+              && mv "$tmp" package.json
           fi
 
           ##
           ##   Get current version from csproj
           ##
           if [[ "$BUMP_ARGS" == csproj* ]]; then
-            installRipgrep
+            install_pkg ripgrep
 
             ## Extract target property name from input: csproj=Version or similar
             PROPERTY_PATH="${BUMP_ARGS#csproj=}"
@@ -490,7 +507,7 @@ jobs:
 
             echo "Starting text-based version bump"
 
-            installRipgrep
+            install_pkg ripgrep
 
             # Escape for regex
             escape() {

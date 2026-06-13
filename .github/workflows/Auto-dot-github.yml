@@ -464,10 +464,10 @@ jobs:
             git restore --source=HEAD -- package.json \
               || true
 
-            install_pkg jq
-            tmp="$(mktemp)"
-            jq --arg v "$RELEASE_TAG" '.version=$v' package.json > "$tmp" \
-              && mv "$tmp" package.json
+            ##install_pkg jq
+            ##tmp="$(mktemp)"
+            ##jq --arg v "$RELEASE_TAG" '.version=$v' package.json > "$tmp" \
+            ##  && mv "$tmp" package.json
           fi
 
           ##
@@ -518,9 +518,10 @@ jobs:
             echo "  Executing rg..."
 
             ## Replace only exact matches of current version
-            ## --> Ignore workspace root package*.json as it was updated by npm command
+            ## --> Ignore workspace root package-lock.json as it was updated by npm command
+            ##     but include root package.json and nested package*.json files (See above)
             replaceTargets=$(rg -l "\bv?${CURRENT_VERSION}\b" . \
-              --glob '!/package*.json' \
+              --glob '!/package-lock.json' \
               --glob '!.git/**' \
               --glob '!CHANGELOG.md' \
               --glob '!node_modules/**' \

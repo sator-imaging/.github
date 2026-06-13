@@ -136,12 +136,6 @@ jobs:
           echo "✏️ Update Files"
           echo "===================================="
 
-          echo "--------------------------------"
-          ls -alR "$WORKDIR/$TARGET_DIR/"
-          echo "--------------------------------"
-          ls -alR "$TARGET_DIR/"
-          echo "--------------------------------"
-
           # Sync all files (additive)
           mkdir -p "$TARGET_DIR"
           rsync -av "$WORKDIR/$TARGET_DIR/" "$TARGET_DIR/"
@@ -508,7 +502,7 @@ jobs:
 
             ## Replace only exact matches of current version
             ## --> Ignore workspace root package*.json as it was updated by npm command
-            replaceTargets=$(rg -l "\b${CURRENT_VERSION}\b" . \
+            replaceTargets=$(rg -l "\bv?${CURRENT_VERSION}\b" . \
               --glob '!/package*.json' \
               --glob '!.git/**' \
               --glob '!CHANGELOG.md' \
@@ -531,7 +525,7 @@ jobs:
 
             if [ -n "$replaceTargets" ]; then
               echo "$replaceTargets" \
-                | xargs -d '\n' sed -i -E "s/\b${ESCAPED_CURRENT_VERSION}\b/${RELEASE_TAG}/g"
+                | xargs -d '\n' sed -i -E "s/\bv?${ESCAPED_CURRENT_VERSION}\b/${RELEASE_TAG}/g"
             fi
 
             echo "Version bump completed"

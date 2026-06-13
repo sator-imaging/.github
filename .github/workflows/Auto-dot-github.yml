@@ -525,7 +525,9 @@ jobs:
 
             if [ -n "$replaceTargets" ]; then
               echo "$replaceTargets" \
-                | xargs -d '\n' sed -i -E "s/\bv?${ESCAPED_CURRENT_VERSION}\b/${RELEASE_TAG}/g"
+                | xargs -d '\n' sed -i -E \
+                  -e "s/\b${ESCAPED_CURRENT_VERSION}\b/${RELEASE_TAG}/g" \
+                  -e "s/\bv${ESCAPED_CURRENT_VERSION}\b/v${RELEASE_TAG}/g"
             fi
 
             echo "Version bump completed"

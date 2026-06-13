@@ -136,6 +136,12 @@ jobs:
           echo "✏️ Update Files"
           echo "===================================="
 
+          echo "--------------------------------"
+          ls -alR "$WORKDIR/$TARGET_DIR/"
+          echo "--------------------------------"
+          ls -alR "$TARGET_DIR/"
+          echo "--------------------------------"
+
           # Sync all files (additive)
           mkdir -p "$TARGET_DIR"
           rsync -av "$WORKDIR/$TARGET_DIR/" "$TARGET_DIR/"
@@ -158,11 +164,20 @@ jobs:
           git push -u origin "$BRANCH"
 
           # Create PR only if one doesn't already exist
-          gh pr create \
+          if output=$(gh pr create \
             --head "$BRANCH" \
             --base main \
-            --fill \
-            || echo "::warning title=PR already exists::Skipped"
+            --fill 2>&1); \
+          then
+            echo "$output"
+          else
+            if echo "$output" | grep -qiE "already exists|pull request already exists"; then
+              echo "::warning title=PR already exists::Skipped"
+            else
+              echo "$output" >&2
+              exit 1
+            fi
+          fi
 
   pr-labeler:
     name: 'Label for GH Release Notes'
@@ -543,8 +558,17 @@ jobs:
           echo "📤 Branch pushed: $BRANCH"
 
           # Create PR only if one doesn't already exist
-          gh pr create \
+          if output=$(gh pr create \
             --head "$BRANCH" \
             --base main \
-            --fill \
-            || echo "::warning title=PR already exists::Skipped"
+            --fill 2>&1); \
+          then
+            echo "$output"
+          else
+            if echo "$output" | grep -qiE "already exists|pull request already exists"; then
+              echo "::warning title=PR already exists::Skipped"
+            else
+              echo "$output" >&2
+              exit 1
+            fi
+          fi

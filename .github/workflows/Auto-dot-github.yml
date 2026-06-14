@@ -221,19 +221,19 @@ jobs:
 
           labels=()
 
-          if matches_pattern '^fix[:(]'; then
+          if matches_pattern '^(fix|bug)[:(]'; then
             labels+=("bug")
           fi
 
-          if matches_pattern '^feat[:(]'; then
+          if matches_pattern '^(feat|perf)[:(]'; then
             labels+=("enhancement")
           fi
 
-          if matches_pattern '^docs[:(]'; then
+          if matches_pattern '^docs?[:(]'; then
             labels+=("documentation")
           fi
 
-          if matches_pattern '^deps[:(]'; then
+          if matches_pattern '^deps?[:(]'; then
             labels+=("dependencies")
           fi
 

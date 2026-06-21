@@ -304,6 +304,9 @@ jobs:
         run: |
           set -euo pipefail
 
+          # Waiting for GH release metadata update (Not required for 90% cases)
+          sleep 10
+
           BUMP_ARGS="${{ inputs.auto-bump-args }}"
 
           echo "===================================="

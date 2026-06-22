@@ -2,12 +2,14 @@ version: 2
 
 multi-ecosystem-groups:
   default:
-    versioning-strategy: "auto"
-    update-types: [ "version-update:semver-patch", "version-update:semver-minor" ]
-    reviewers: [ "sator-imaging" ]
-    labels: [ "dependabot" ]
     commit-message:
       prefix: "deps"
+    reviewers: [ "sator-imaging" ]
+    labels: [ "dependabot" ]
+    versioning-strategy: "auto"
+    update-types:
+      - "version-update:semver-minor"
+      - "version-update:semver-patch"
     schedule:
       interval: "daily"
       time: "06:00"
@@ -23,9 +25,12 @@ updates:
   - package-ecosystem: "npm"
     multi-ecosystem-group: "default"
     directory: "/"
+    patterns: ["*"]
   - package-ecosystem: "bun"
     multi-ecosystem-group: "default"
     directory: "/"
+    patterns: ["*"]
   - package-ecosystem: "nuget"
     multi-ecosystem-group: "default"
     directory: "/"
+    patterns: ["*"]

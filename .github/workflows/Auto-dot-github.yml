@@ -390,7 +390,8 @@ jobs:
             # → [@username](https://github.com/username)[bot]
 
             ## NOTE: '[' '@' '1' ']' sequence may cause problem. Use charcode instead.
-            s/@([^\s\[]+)(\[[^\]]+\])?/\x5B\x40$1\x5D(https:\/\/github.com\/$1)$2/g;
+            # Match each mention independently so a single line with multiple handles is converted correctly.
+            s/(?<![A-Za-z0-9_])@([A-Za-z0-9][A-Za-z0-9-]{0,38})(\[[^\]]+\])?/\x5B\x40$1\x5D(https:\/\/github.com\/$1)$2/g;
           ' <<< "$RELEASE_BODY_CLEAN")"
 
           echo "===================================="

@@ -432,20 +432,6 @@ jobs:
           echo "✏️ Update Files Phase 2"
           echo "===================================="
 
-          APT_UPDATED=0
-
-          install_pkg() {
-            pkg="$1"
-
-            if ! command -v "$pkg" >/dev/null 2>&1; then
-              if [ "$APT_UPDATED" -eq 0 ]; then
-                sudo apt-get update
-                APT_UPDATED=1
-              fi
-              sudo apt-get install -y "$pkg"
-            fi
-          }
-
           CURRENT_VERSION=""
 
           ##
@@ -459,21 +445,18 @@ jobs:
           ##   Get current version from csproj
           ##
           if [[ "$BUMP_ARGS" == csproj* ]]; then
-            install_pkg ripgrep
-
             ## Extract target property name from input: csproj=Version or similar
             PROPERTY_PATH="${BUMP_ARGS#csproj=}"
 
             echo "PROPERTY_PATH = $PROPERTY_PATH"
 
             ## Read current version from first matching csproj/props file
+            PROPERTY_REGEX="$(printf '%s' "$PROPERTY_PATH" | sed -E 's/[][(){}.^$*+?|\\]/\\&/g')"
             CURRENT_VERSION="$(
-              rg -o "<${PROPERTY_PATH}>[^<]+</${PROPERTY_PATH}>" \
-                --no-filename \
-                -g "*.csproj" -g "*.props" \
-                . \
-              | head -n1 \
-              | sed -E "s|</?${PROPERTY_PATH}>||g"
+              find . -type f \( -name '*.csproj' -o -name '*.props' \) \
+                -exec grep -hEo "<${PROPERTY_REGEX}>[^<]+</${PROPERTY_REGEX}>" {} + 2>/dev/null \
+                | head -n1 \
+                | sed -E "s|</?${PROPERTY_REGEX}>||g"
             )"
 
             echo "CURRENT_VERSION = $CURRENT_VERSION"
@@ -492,39 +475,25 @@ jobs:
 
             echo "Starting text-based version bump"
 
-            install_pkg ripgrep
-
             # Escape for regex
             escape() {
               printf '%s' "$1" | sed -E 's/[][(){}.^$*+?|\\]/\\&/g'
             }
             ESCAPED_CURRENT_VERSION="$(escape "$CURRENT_VERSION")"
 
-            echo "  Executing rg..."
+            echo "  Locating files to update..."
 
             ## Replace only exact matches of current version
-            replaceTargets=$(rg -l "\bv?${CURRENT_VERSION}\b" . \
-              --glob '!.git/**' \
-              --glob '!CHANGELOG.md' \
-              --glob '!node_modules/**' \
-              --glob '!bin/**' \
-              --glob '!obj/**' \
-              --glob '!dist/**' \
-              || true
-            )
-
-            echo "  Checking rg status..."
-
-            # Ignore no match error
-            rg_status=$?
-            if [ $rg_status -ne 0 ] && [ $rg_status -ne 1 ]; then
-              exit $rg_status
-            fi
+            replaceTargets="$(
+              find . \
+                \( -path '*/.git/*' -o -path './CHANGELOG.md' -o -path '*/node_modules/*' -o -path '*/bin/*' -o -path '*/obj/*' -o -path '*/dist/*' \) -prune -o \
+                -type f -exec grep -IlF -- "$CURRENT_VERSION" {} + 2>/dev/null || true
+            )"
 
             echo "  Executing sed..."
 
             if [ -n "$replaceTargets" ]; then
-              echo "$replaceTargets" \
+              printf '%s\n' "$replaceTargets" \
                 | xargs -d '\n' sed -i -E \
                   -e "s/\b${ESCAPED_CURRENT_VERSION}\b/${RELEASE_TAG}/g" \
                   -e "s/\bv${ESCAPED_CURRENT_VERSION}\b/v${RELEASE_TAG}/g"

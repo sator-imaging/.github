@@ -451,12 +451,14 @@ jobs:
             echo "PROPERTY_PATH = $PROPERTY_PATH"
 
             ## Read current version from first matching csproj/props file
-            PROPERTY_REGEX="$(printf '%s' "$PROPERTY_PATH" | sed -E 's/[][(){}.^$*+?|\\]/\\&/g')"
             CURRENT_VERSION="$(
-              find . -type f \( -name '*.csproj' -o -name '*.props' \) \
-                -exec grep -hEo "<${PROPERTY_REGEX}>[^<]+</${PROPERTY_REGEX}>" {} + 2>/dev/null \
+              grep -r -E -o \
+                --include='*.csproj' --include='*.props' \
+                --exclude-dir='.git' --exclude-dir='node_modules' --exclude-dir='bin' --exclude-dir='obj' --exclude-dir='dist' \
+                "<${PROPERTY_PATH}>[^<]+</${PROPERTY_PATH}>" . 2>/dev/null \
+                | sed -E 's|^[^:]+:||' \
                 | head -n1 \
-                | sed -E "s|</?${PROPERTY_REGEX}>||g"
+                | sed -E "s|</?${PROPERTY_PATH}>||g" || true
             )"
 
             echo "CURRENT_VERSION = $CURRENT_VERSION"
@@ -475,7 +477,6 @@ jobs:
 
             echo "Starting text-based version bump"
 
-            # Escape for regex
             escape() {
               printf '%s' "$1" | sed -E 's/[][(){}.^$*+?|\\]/\\&/g'
             }
@@ -484,16 +485,18 @@ jobs:
             echo "  Locating files to update..."
 
             ## Replace only exact matches of current version
+            MATCH_PATTERN="\bv?${ESCAPED_CURRENT_VERSION}\b"
             replaceTargets="$(
-              find . \
-                \( -path '*/.git/*' -o -path './CHANGELOG.md' -o -path '*/node_modules/*' -o -path '*/bin/*' -o -path '*/obj/*' -o -path '*/dist/*' \) -prune -o \
-                -type f -exec grep -IlF -- "$CURRENT_VERSION" {} + 2>/dev/null || true
+              grep -r -l -E "$MATCH_PATTERN" \
+                --exclude='CHANGELOG.md' \
+                --exclude-dir='.git' --exclude-dir='node_modules' --exclude-dir='bin' --exclude-dir='obj' --exclude-dir='dist' \
+                . 2>/dev/null || true
             )"
 
             echo "  Executing sed..."
 
             if [ -n "$replaceTargets" ]; then
-              printf '%s\n' "$replaceTargets" \
+              echo "$replaceTargets" \
                 | xargs -d '\n' sed -i -E \
                   -e "s/\b${ESCAPED_CURRENT_VERSION}\b/${RELEASE_TAG}/g" \
                   -e "s/\bv${ESCAPED_CURRENT_VERSION}\b/v${RELEASE_TAG}/g"

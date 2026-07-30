@@ -88,6 +88,7 @@ jobs:
     permissions:
       pull-requests: write
       contents: write
+      workflows: write  # Auto bump may update workflow files
 
     runs-on: ubuntu-slim
     steps:

@@ -514,8 +514,8 @@ jobs:
           TS=$(date -u +"%Y%m%d-%H%M%S")
 
           # Don't include ignored files
-          git reset .github/workflows/*  # cannot push workflows from workflow
           git add .
+          git reset .github/workflows/*  # cannot push workflows from workflow
 
           # But force push CHANGELOG even if not allowed in .gitignore
           git add -f "$CHANGELOG_FILE"

@@ -223,11 +223,11 @@ jobs:
 
           labels=()
 
-          if matches_pattern '^(fix|bug)[:(]'; then
+          if matches_pattern '^(fix|bug)!?[:(]'; then
             labels+=("bug")
           fi
 
-          if matches_pattern '^(feat|perf)[:(]'; then
+          if matches_pattern '^(feat|perf)!?[:(]'; then
             labels+=("enhancement")
           fi
 

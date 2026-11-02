@@ -114,7 +114,7 @@ jobs:
 
           # GITHUB_TOKEN cannot push workflows. Move the lockfile manually.
           mv .github/workflows/actions.lock .github/actions.lock__move-me-to-workflows-folder
-          git add .github
+          git add .github/actions.lock*
 
           if git diff --cached --quiet; then
             echo "::warning title=No changes::actions.lock is already up to date"

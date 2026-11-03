@@ -113,7 +113,7 @@ jobs:
           gh actions-lock
 
           # GITHUB_TOKEN cannot push workflows. Move the lockfile manually.
-          mv .github/workflows/actions.lock .github/actions.lock__move-me-to-workflows-folder
+          mv .github/workflows/actions.lock .github/actions.lock__copy-to-workflows-folder
           git add .github/actions.lock*
 
           if git diff --cached --quiet; then

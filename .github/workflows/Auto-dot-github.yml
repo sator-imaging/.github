@@ -35,6 +35,9 @@ on:
           - npm
             --> No configuration
 
+          - cargo
+            --> Finds the current version from the first Cargo.toml package
+
           - csproj=XmlTagName (e.g. csproj=MyVersionProperty)
             --> Finds the current version from the first matching .csproj/.props file.
 
@@ -440,6 +443,68 @@ jobs:
           ##
           if [[ "$BUMP_ARGS" == npm ]]; then
             CURRENT_VERSION="$(npm pkg get version --workspaces=false 2>/dev/null | tr -d '"')" || true
+          fi
+
+          ##
+          ##   Get current version from Cargo.toml
+          ##
+          if [[ "$BUMP_ARGS" == cargo ]]; then
+            while IFS= read -r cargo_file; do
+              ## Package versions take precedence over workspace-shared versions.
+              CURRENT_VERSION="$(
+                awk '
+                  /^[[:space:]]*\[package\][[:space:]]*(#.*)?$/ {
+                    in_package=1
+                    next
+                  }
+                  /^[[:space:]]*\[/ {
+                    in_package=0
+                  }
+                  in_package &&
+                  /^[[:space:]]*version[[:space:]]*=[[:space:]]*"[^"]+"/ {
+                    line=$0
+                    sub(/^[^"]*"*/, "", line)
+                    sub(/".*$/, "", line)
+                    print line
+                    exit
+                  }
+                ' "$cargo_file"
+              )"
+
+              if [[ -z "$CURRENT_VERSION" ]]; then
+                ## Support workspace.package inheritance without assuming Cargo.lock format.
+                CURRENT_VERSION="$(
+                  awk '
+                    /^[[:space:]]*\[workspace\.package\][[:space:]]*(#.*)?$/ {
+                      in_workspace_package=1
+                      next
+                    }
+                    /^[[:space:]]*\[/ {
+                      in_workspace_package=0
+                    }
+                    in_workspace_package &&
+                    /^[[:space:]]*version[[:space:]]*=[[:space:]]*"[^"]+"/ {
+                      line=$0
+                      sub(/^[^"]*"*/, "", line)
+                      sub(/".*$/, "", line)
+                      print line
+                      exit
+                    }
+                  ' "$cargo_file"
+                )"
+              fi
+
+              if [[ -n "$CURRENT_VERSION" ]]; then
+                break
+              fi
+            done < <(find . -name Cargo.toml -not -path './.git/*' -print | sort)
+
+            echo "CURRENT_VERSION = $CURRENT_VERSION"
+
+            if [[ -z "$CURRENT_VERSION" ]]; then
+              echo "ERROR: package version not found in Cargo.toml"
+              exit 1
+            fi
           fi
 
           ##

@@ -41,6 +41,9 @@ on:
           - npm
             --> No configuration
 
+          - cargo
+            --> Finds the current version from the first Cargo.toml package
+
           - csproj=XmlTagName (e.g. csproj=MyVersionProperty)
             --> Finds the current version from the first matching .csproj/.props file.
 

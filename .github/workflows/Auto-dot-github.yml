@@ -134,6 +134,7 @@ jobs:
           # Sync all files (additive)
           mkdir -p "$TARGET_DIR"
           rsync -av "$WORKDIR/$TARGET_DIR/" "$TARGET_DIR/"
+          rm -rf -- "$WORKDIR"
 
           # There is no way to update workflows with 'permissions' in yaml
           rm -rf "$TARGET_DIR"/workflows/*.yml
@@ -144,8 +145,9 @@ jobs:
 
           TS=$(date -u +"%Y%m%d-%H%M%S")
 
-          # Force push even if not allowed in .gitignore
-          git add -f --ignore-removal "$TARGET_DIR"
+          # Force-add synced files even if the destination repository ignores them.
+          git add -f --ignore-removal -- "$TARGET_DIR"
+          git restore --worktree -- "$TARGET_DIR/workflows"
 
           if ! git commit -m "[bot] 🔄 Sync \`${TARGET_DIR}\` ($TS)"; then
             echo "::warning title=No changes::Skipping .github sync"

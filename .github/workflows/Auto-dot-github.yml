@@ -3,6 +3,9 @@ name: '[Auto] Repo Gardening'
 on:
   schedule:
     - cron: "0 23 * * *"
+  push:
+    paths:
+      - '.github/workflows/**'  # Trigger lockfile updates when workflow files are committed
   pull_request:  # PR labeler
     types:
       - opened
@@ -78,6 +81,63 @@ env:
 
 
 jobs:
+
+  auto-actions-lock:
+    name: 'Lock GitHub Actions Dependencies'
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    runs-on: ubuntu-slim
+    steps:
+
+      - uses: actions/checkout@v6
+
+      - name: Generate actions.lock and create PR
+        run: |
+          set -euo pipefail
+
+          gh extension install github/gh-actions-lock
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          BASE_BRANCH="$GITHUB_REF_NAME"
+          BRANCH="bot/auto-actions-lock/$BASE_BRANCH"
+
+          git fetch origin
+          git checkout -B "$BRANCH" "origin/$BASE_BRANCH"
+
+          gh actions-lock
+
+          # GITHUB_TOKEN cannot push workflows. Move the lockfile manually.
+          mv .github/workflows/actions.lock .github/actions.lock__copy-to-workflows-folder
+          git add .github/actions.lock*
+
+          if git diff --cached --quiet; then
+            echo "::warning title=No changes::actions.lock is already up to date"
+            exit 0
+          fi
+
+          git commit -m "[bot] 🔒 Update GitHub Actions lockfile"
+          git push --force-with-lease -u origin "$BRANCH"
+
+          if output=$(gh pr create \
+            --head "$BRANCH" \
+            --base "$BASE_BRANCH" \
+            --fill 2>&1); \
+          then
+            echo "$output"
+          else
+            if echo "$output" | grep -qiE "already exists|pull request already exists"; then
+              echo "::warning title=PR already exists::Updated the existing PR branch"
+            else
+              echo "$output" >&2
+              exit 1
+            fi
+          fi
 
   sync-dot-github:
     name: 'Sync `.github` Folder Up to Date'

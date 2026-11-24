@@ -9,6 +9,9 @@ name: '[Auto] Repo Gardening'
 on:
   schedule:
     - cron: "0 23 * * *"
+  push:
+    paths:
+      - '.github/workflows/**'  # Trigger lockfile updates when workflow files are committed
   pull_request:  # PR labeler
     types:
       - opened

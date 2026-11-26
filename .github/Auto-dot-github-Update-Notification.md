@@ -9,12 +9,17 @@ name: '[Auto] Repo Gardening'
 on:
   schedule:
     - cron: "0 23 * * *"
+  push:
+    branches:
+      - main
+      - master
   pull_request:  # PR labeler
     types:
       - opened
       - edited
       - closed
       - reopened
+      - synchronize
   # NOTE: draft release won't trigger any 'release' event.
   #       For workaround, use dispatch event to invoke auto-bump action
   workflow_dispatch:
@@ -48,6 +53,9 @@ on:
                 that is not XML-aware, not schema-aware.
                 Carefully review PR.
 
+# Declare default permissions as read only.
+permissions: read-all
+
 jobs:
   main:
     uses: sator-imaging/.github/.github/workflows/Auto-dot-github.yml@main
@@ -56,6 +64,7 @@ jobs:
       pull-requests: write
       contents: write  # Sync .github | Auto bump
       issues: write    # PR labeler
+      security-events: write  # Scorecard SARIF upload
     with:
       auto-bump: ${{ inputs.auto-bump }}
 
